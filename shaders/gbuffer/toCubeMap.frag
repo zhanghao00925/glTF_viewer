@@ -1,4 +1,4 @@
-#version 410 core core
+#version 410 core
 layout (location = 0) out vec3 envCubemap;
 
 in vec2 TexCoords;
