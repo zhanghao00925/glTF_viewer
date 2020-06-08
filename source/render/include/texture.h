@@ -1,19 +1,36 @@
-#pragma once
+/**************************/
+/*  FILE NAME: texture.h  */
+/**************************/
+#ifndef _TEXTURE_H_
+#define _TEXTURE_H_
 
-#include "render_core.h"
+/**************/
+/*  INCLUDES  */
+/**************/
+#include <string>
+#include "image.h"
+#include "texture_sampler.h"
 
-// stb library for image IO
-#include "stb_image.h"
-#include "stb_image_write.h"
-
-class Texture {
+/*************************/
+/*  CLASS NAME: Texture  */
+/*************************/
+class Texture
+{
 public:
-    Texture() {}
-    void Release() {
-        glDeleteTextures(1, &texId);
-    }
-    Texture(int channel);
-    Texture(const string &Filename);
-    Texture(const vector<string> &texturesPath);
-    GLuint texId;
-};
+    Texture();
+    Texture(const Texture& other);
+
+public:
+    void SetupTexture();
+    void CleanupTexture();
+    void BindTexture();
+
+public:
+    std::string name;
+    Image image;
+    TextureSampler sampler;
+
+private:
+    unsigned int tbo;
+}; // class name Texture
+#endif // !_TEXTURE_H_

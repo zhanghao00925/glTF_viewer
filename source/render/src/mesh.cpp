@@ -1,74 +1,138 @@
+/*************************/
+/*  FILE NAME: mesh.cpp  */
+/*************************/
 #include "mesh.h"
 
-Mesh::Mesh(const vector<Vertex> &vertices,
-           const vector<GLuint> &indices) {
+/**************/
+/*  INCLUDES  */
+/**************/
 
-    size = indices.size();
-    setupMesh(vertices, indices);
+/* default constructor */
+Mesh::Mesh()
+        : name(), vertices(), indices(), material_id(), matrix(), joint_matrices(), vao(), vbo(), ebo() {
+    for (unsigned int i = 0; i < MAX_NUM_JOINTS; ++i)
+        joint_matrices[i] = glm::identity<mat4>();
+
+    morph_indices = {0};
+    morph_weights = {0};
+
+    material_id = -1;
+    vao = 0;
+    vbo = 0;
+    ebo = 0;
 }
 
-void Mesh::Draw(Shader &shader, mat4 &model, mat4 &view, mat4 &projection) {
-    shader.Use();
+/* set the GLTFMesh data to be available in OpenGL */
+void Mesh::SetupMesh() {
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
 
-    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLTFVertex) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
 
-    // Draw mesh
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, size, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
-}
-
-void Mesh::Draw(Shader &shader, mat4 &model, mat4 &view, mat4 &projection,
-        Texture &texture, vec3 color, bool useTexture, int nyu_label, int instance) {
-    shader.Use();
-
-    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-    if (useTexture) {
-        glUniform1i(glGetUniformLocation(shader.Program, "use_texture"), 1);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture.texId);
-        glUniform1i(glGetUniformLocation(shader.Program, "color_texture"), 0);
-    } else {
-        glUniform1i(glGetUniformLocation(shader.Program, "use_texture"), 0);
-        glUniform3fv(glGetUniformLocation(shader.Program, "in_color"), 1, glm::value_ptr(color));
-    }
-    glUniform1i(glGetUniformLocation(shader.Program, "nyu_label"), nyu_label);
-    glUniform1i(glGetUniformLocation(shader.Program, "instance"), instance);
-
-    // Draw mesh
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, size, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
-}
-
-void Mesh::setupMesh(const vector<Vertex> &vertices,
-                     const vector<GLuint> &indices) {
-    // Create
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    // Bind VAO
-    glBindVertexArray(VAO);
-    // Bind VBO
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-    // Bind EBO
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
-    // Vertex Positions
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
-    // Vertex Normals
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLTFVertex),
+                          reinterpret_cast<void *>(offsetof(GLTFVertex, position)));
+
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, normal));
-    // Vertex texture Coords
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GLTFVertex),
+                          reinterpret_cast<void *>(offsetof(GLTFVertex, normal)));
+
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, texCoords));
-    // Unbind
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(GLTFVertex),
+                          reinterpret_cast<void *>(offsetof(GLTFVertex, texcoord)));
+
+    glEnableVertexAttribArray(3);
+    glVertexAttribIPointer(3, 4, GL_UNSIGNED_INT, sizeof(GLTFVertex),
+                           reinterpret_cast<void *>(offsetof(GLTFVertex, joint)));
+
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(GLTFVertex),
+                          reinterpret_cast<void *>(offsetof(GLTFVertex, weight)));
+
+    glGenBuffers(1, &ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), indices.data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    const int NUM_MORPH_TARGETS = morph_vertices.size();
+    morph_vbos.resize(NUM_MORPH_TARGETS, 0);
+    vector<vec3> Positions;
+    for (int i = 0; i < NUM_MORPH_TARGETS; i++) {
+        const int NUM_VERTICES = morph_vertices[i].size();
+        Positions.clear();
+        Positions.reserve(NUM_VERTICES);
+        for (int j = 0; j < NUM_VERTICES; j++) {
+            Positions.emplace_back(morph_vertices[i][j].position);
+        }
+        glGenBuffers(1, &morph_vbos[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, morph_vbos[i]);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * Positions.size(), Positions.data(), GL_STATIC_DRAW);
+
+    }
+}
+
+/* clean up the GLTFMesh data that was set up */
+void Mesh::CleanupMesh() {
+    glDeleteBuffers(1, &ebo);
+    glDeleteBuffers(1, &vbo);
+    glDeleteVertexArrays(1, &vao);
+    for (auto &morph_vbo: morph_vbos) { ;
+        glDeleteBuffers(1, &morph_vbo);
+    }
+}
+
+/* render the GLTFMesh data */
+void Mesh::Render(Shader shader, bool is_animation, bool is_skin, vector<float> weights) {
+    if (!morph_vbos.empty()) {
+        // select
+        pre_morph_indics = morph_indices;
+        pre_morph_weights = morph_weights;
+        for (int i = 0; i < MAX_NUM_MORPHS &&  i < morph_vbos.size(); i++) {
+            float max = -1;
+            int index = -1;
+            // search
+            for (int j = 0; j < weights.size(); j++) {
+                if (max < weights[j]) {
+                    max = weights[j];
+                    index = j;
+                }
+            }
+            // mark
+            assert(index != -1);
+            weights[index] = -1;
+            // set vbo and weight buffer
+            morph_indices[i] = index;
+            morph_weights[i] = max;
+        }
+        glBindVertexArray(vao);
+        for (int i = 0; i < MAX_NUM_MORPHS; i++) {
+            glBindBuffer(GL_ARRAY_BUFFER, morph_vbos[morph_indices[i]]);
+            glEnableVertexAttribArray(5 + i);
+            glVertexAttribPointer(5 + i, 3, GL_FLOAT, GL_FALSE, 0, 0);
+            glBindBuffer(GL_ARRAY_BUFFER, morph_vbos[pre_morph_indics[i]]);
+            glEnableVertexAttribArray(5 + i + MAX_NUM_MORPHS);
+            glVertexAttribPointer(5 + i + MAX_NUM_MORPHS, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        }
+        glBindVertexArray(0);
+        glUniform1fv(glGetUniformLocation(shader.Program, "morph_weights"), MAX_NUM_MORPHS, morph_weights.data());
+        glUniform1fv(glGetUniformLocation(shader.Program, "pre_morph_weights"), MAX_NUM_MORPHS, pre_morph_weights.data());
+
+    }
+    if (is_skin) {
+        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "bone_matrix"), MAX_NUM_JOINTS, GL_FALSE,
+                           &joint_matrices[0][0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "pre_bone_matrix"), MAX_NUM_JOINTS, GL_FALSE,
+                           &pre_joint_matrices[0][0][0]);
+    } else {
+        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "local_model"), 1, GL_FALSE, &matrix[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "pre_local_model"), 1, GL_FALSE, &pre_matrix[0][0]);
+    }
+
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, indices.size());
     glBindVertexArray(0);
 }

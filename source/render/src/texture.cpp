@@ -1,76 +1,87 @@
+/****************************/
+/*  FILE NAME: texture.cpp  */
+/****************************/
 #include "texture.h"
+/**************/
+/*  INCLUDES  */
+/**************/
+#include <stdexcept>
+#include "render_core.h"
 
-Texture::Texture(int channel) {
-    glGenTextures(1, &texId);
-    glBindTexture(GL_TEXTURE_2D, texId);
-    unsigned char image[4] = {255, 255, 255, 255};
-    GLenum format = GL_RGB;
-    if (channel == 1)
+/*********************/
+/*  STATIC VARIABLE  */
+/*********************/
+static constexpr int Wrap_Mode[] = 
+{
+    0,     // UNKNOWN
+    10497, // REPEAT
+    33069, // CLAMP_TO_BORDER,
+    33071, // CLAMP_TO_EDGE
+    33648  // GL_MIRRORED_REPEAT
+};
+
+static constexpr int Filter_Mode[] = 
+{
+    0,    // UNKNOWN
+    9728, // NEAREST
+    9729, // LINEAR
+    9984, // NEAREST_MIPMAP_NEAREST
+    9985, // LINEAR_MIPMAP_NEAREST
+    9986, // NEAREST_MIPMAP_LINEAR
+    9987  // LINEAR_MIPMAP_LINEAR
+};
+
+/* default constructor */
+Texture::Texture()
+    : name()
+    , image()
+    , sampler()
+    , tbo()
+{ /* empty */ }
+
+/* copy constructor */
+Texture::Texture(const Texture& other)
+    : name(other.name)
+    , image(other.image)
+    , sampler(other.sampler)
+    , tbo(other.tbo)
+{ /* empty */ }
+
+/* function to make texture data available to OpenGL */
+void Texture::SetupTexture()
+{
+    glGenTextures(1, &tbo);
+    glBindTexture(GL_TEXTURE_2D, tbo);
+    
+    GLenum format;
+    if(image.component == 1)
         format = GL_RED;
-    else if (channel == 3)
+    else if(image.component == 3)
         format = GL_RGB;
-    else if (channel == 4)
+    else if(image.component == 4)
         format = GL_RGBA;
-    glTexImage2D(GL_TEXTURE_2D, 0, format, 1, 1, 0, format, GL_UNSIGNED_BYTE, image);
+    else throw std::runtime_error("Undefined Texture image format.");
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, image.width, image.height, 0, format, GL_UNSIGNED_BYTE, image.data.data());
     glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, Wrap_Mode[static_cast<int>(sampler.wrap_R)]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, Wrap_Mode[static_cast<int>(sampler.wrap_S)]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, Wrap_Mode[static_cast<int>(sampler.wrap_T)]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Filter_Mode[static_cast<int>(sampler.min_filter)]);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Filter_Mode[static_cast<int>(sampler.mag_filter)]);
+
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-Texture::Texture(const string &Filename) {
-    int width, height, channel;
-    glGenTextures(1, &texId);
-    glBindTexture(GL_TEXTURE_2D, texId);
-    // Read image
-    if (stbi_is_hdr(Filename.c_str())) {
-        float *image = nullptr;
-        image = stbi_loadf(Filename.c_str(), &width, &height, &channel, 0);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, image);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        // Free data
-        stbi_image_free(image);
-    } else {
-        unsigned char *image = nullptr;
-        image = stbi_load(Filename.c_str(), &width, &height, &channel, 0);
-        GLenum format = GL_RGB;
-        if (channel == 1)
-            format = GL_RED;
-        else if (channel == 3)
-            format = GL_RGB;
-        else if (channel == 4)
-            format = GL_RGBA;
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, image);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        // Free data
-        stbi_image_free(image);
-    }
-    // Set texture attrib
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
+/* function to clean up texture data used in OpenGL */
+void Texture::CleanupTexture()
+{
+    glDeleteTextures(1, &tbo);
 }
 
-Texture::Texture(const vector<string> &texturesPath) {
-    int width, height, channel;
-    unsigned char *image;
-    // Create texture
-    glGenTextures(1, &texId);
-    // Bind texture
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texId);
-    for (GLuint i = 0; i < texturesPath.size(); i++) {
-        image = stbi_load(texturesPath[i].c_str(), &width, &height, &channel, 0);
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-        stbi_image_free(image);
-    }
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+/* function to bind OpenGL texture */
+void Texture::BindTexture()
+{
+    glBindTexture(GL_TEXTURE_2D, tbo);
 }

@@ -1,30 +1,62 @@
-#pragma once
+/************************/
+/*  FILE NAME: model.h  */
+/************************/
+#ifndef _MODEL_H_
+#define _MODEL_H_
+
+/**************/
+/*  INCLUDES  */
+/**************/
+#include <stdexcept>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <map>
+
+#include "mesh.h"
+#include "node.h"
+#include "skin.h"
+#include "animation.h"
+#include "texture.h"
+#include "material.h"
 
 #include "render_core.h"
-#include "mesh.h"
-
-// ASSIMP
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-
-class Model {
+/***********************/
+/*  CLASS NAME: Model  */
+/***********************/
+class Model
+{
 public:
-    Model(const string &path);
-    void Draw(Shader &shader, mat4 &model, mat4 &view, mat4 &projection);
-    ~Model() {
-        for (auto &mesh : meshVector) {
-            mesh.Release();
-        }
-    }
+    Model(const std::string& filename);
+    Model(const Model& other);
+    ~Model();
 
-    map<string, Mesh> meshMap;
-    vector<Mesh> meshVector;
+public:
+    void SetupModel();
+    void CleanupModel();
+    void Update(Shader shader, double total_time);
+    void Render(Shader shader);
+
+public:
+    bool IsAnimated() const;
+    void ChangeAnimation(int num);
+
 private:
-    string directory;
-    void loadModel(const string &path);
-    void processNode(aiNode* node, const aiScene *scene);
-    Mesh processMesh(aiMesh *mesh);
+    void LoadModel(const std::string& file);
+    mat4 GetNodeMatrix(int node_id);
+    void UpdateAnimation(Shader shader, double duration);
+    void UpdateNode(Shader shader, int node_id);
 
-//    static Assimp::Importer importer;
-};
+private:
+    size_t curr_animation;
+    std::string filename;
+    std::map<int, Mesh> meshes;
+    std::map<int, Node> nodes;
+    std::map<int, Skin> skins;
+    std::map<int, Animation> animations;
+    std::map<int, Texture> textures;
+    std::map<int, Material> materials;
+}; // class Model
+#endif // !_MODEL_H_

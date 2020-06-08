@@ -42,7 +42,7 @@ void RenderLoop()
                                             (float)WindowConfig::SCR_WIDTH / (float)WindowConfig::SCR_HEIGHT,
                                             NEAR, FAR);
 
-   GLTFModel girlModel("../assets/sci-fi_girl/scene.gltf");
+   Model girlModel("../assets/sci-fi_girl/scene.gltf");
     // GLTFModel girlModel("../assets/buster_drone/scene.gltf");
     Shader animationShader("../shaders/skin/model.vert", "../shaders/skin/model.frag");
     animationShader.Use();

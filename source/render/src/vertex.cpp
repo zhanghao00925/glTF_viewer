@@ -1,7 +1,7 @@
 /***************************/
 /*  FILE NAME: vertex.cpp  */
 /***************************/
-#include "gltfvertex.h"
+#include "vertex.h"
 
 /* default constructor */
 GLTFVertex::GLTFVertex()

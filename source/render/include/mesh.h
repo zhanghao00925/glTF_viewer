@@ -1,44 +1,57 @@
-#pragma once
+/***********************/
+/*  FILE NAME: mesh.h  */
+/***********************/
+#ifndef _MESH_H_
+#define _MESH_H_
 
 #include "render_core.h"
-#include "texture.h"
 #include "shader.h"
+/**************/
+/*  INCLUDES  */
+/**************/
+#include <string>
+#include <vector>
+#include <array>
+#include "vertex.h"
 
-struct Vertex {
-    vec3 position;
-    vec3 normal;
-    vec2 texCoords;
+constexpr unsigned int MAX_NUM_JOINTS = 120U;
+constexpr unsigned int MAX_NUM_MORPHS = 3U;
 
-    Vertex() = default;
-
-    Vertex(const vec3 &position, const vec3 &normal, const vec2 &texCoords) {
-        this->position = position;
-        this->normal = normal;
-        this->texCoords = texCoords;
-    }
-};
-
-class Mesh {
+/**********************/
+/*  CLASS NAME: Mesh  */
+/**********************/
+class Mesh
+{
 public:
-    Mesh() {}
-    Mesh(const vector<Vertex> &vertices,
-         const vector<GLuint> &indices);
-    void Draw(Shader &shader, mat4 &model, mat4 &view, mat4 &projection);
-    void Draw(Shader &shader, mat4 &model, mat4 &view, mat4 &projection,
-            Texture &texture, vec3 color, bool useTexture, int nyu_label, int instance);
+    Mesh();
+//    GLTFMesh(const GLTFMesh& other);
 
-    void Release() {
-        glDeleteVertexArrays(1, &VAO);
-        glDeleteBuffers(1, &VBO);
-        glDeleteBuffers(1, &EBO);
-    }
-    GLuint VAO;
-    GLuint size;
+public:
+    void SetupMesh();
+    void CleanupMesh();
+    void Render(Shader shader, bool is_animation, bool is_skin, vector<float> weights = vector<float>());
+
+public:
+    std::string name;
+    std::vector<GLTFVertex> vertices;
+    std::vector<unsigned int> indices;
+
+    int material_id;
+    mat4 matrix;
+    mat4 pre_matrix;
+    std::vector<std::vector<GLTFVertex>> morph_vertices;
+
+    std::array<int, MAX_NUM_MORPHS> morph_indices;
+    std::array<int, MAX_NUM_MORPHS> pre_morph_indics;
+    std::array<float, MAX_NUM_MORPHS> morph_weights;
+    std::array<float, MAX_NUM_MORPHS> pre_morph_weights;
+    std::array<mat4, MAX_NUM_JOINTS> joint_matrices;
+    std::array<mat4, MAX_NUM_JOINTS> pre_joint_matrices;
+
 private:
-    GLuint VBO, EBO;
-    void setupMesh(const vector<Vertex> &vertices,
-                   const vector<GLuint> &indices);
-};
-
-
-
+    vector<GLuint> morph_vbos;
+    GLuint vao;
+    GLuint vbo;
+    GLuint ebo;
+}; // class Mesh
+#endif // !_MESH_H_
