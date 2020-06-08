@@ -29,7 +29,7 @@ bool WindowConfig::InitWindow()
         //            cout << "WindowsConfig::visible : " << WindowConfig::visible << endl;
         glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
     }
-    window = glfwCreateWindow(WindowConfig::SCR_WIDTH, WindowConfig::SCR_HEIGHT, "KloudSim", nullptr, nullptr); // Windowed
+    window = glfwCreateWindow(WindowConfig::SCR_WIDTH, WindowConfig::SCR_HEIGHT, "gltf_Viewer", nullptr, nullptr); // Windowed
     if (window == nullptr)
     {
         const char *description;

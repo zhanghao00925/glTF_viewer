@@ -905,6 +905,7 @@ void Model::Render(Shader shader)
         {
             const Material& material = materials[meshes[i].material_id];
             
+            
             /* NOTE: use only diffuse texture */
             if(material.base_color_texture_id > -1)
             {
@@ -1030,35 +1031,33 @@ void Model::UpdateAnimation(Shader shader, double duration)
                     /* NOTE: use the previous sampler output information of the current frame              */
                     /* TODO: interpolate the sampler output information before and after the current frame */
                     /*       using the interpolation information stored in the sampler                     */
-                    if(channel.path_type == PATH_TYPE::TRANSLATION)
-                    {
-                        vec3 start_translation = sampler.outputs[start_index];
-                        vec3 end_translation = sampler.outputs[end_index];
-                        nodes[channel.node_id].translate = lerp(start_translation, end_translation, u);
-                    }
-                    else if(channel.path_type == PATH_TYPE::SCALE)
-                    {
-                        vec3 start_scale = sampler.outputs[start_index];
-                        vec3 end_scale = sampler.outputs[end_index];
-                        nodes[channel.node_id].scale = lerp(start_scale, end_scale, u);
-                    }
-                    else if(channel.path_type == PATH_TYPE::ROTATION)
-                    {
-                        auto start_rotation = sampler.outputs[start_index];
-                        auto end_rotation = sampler.outputs[end_index];
-                        quat start_quat = quat(start_rotation.w, start_rotation.x, start_rotation.y, start_rotation.z);
-                        quat end_quat = quat(end_rotation.w, end_rotation.x, end_rotation.y, end_rotation.z);
-                        nodes[channel.node_id].rotate = glm::slerp(start_quat, end_quat, u);
-                    }
-                    else if (channel.path_type == PATH_TYPE::WEIGHTS)
-                    {
-                        int weights_size = sampler.outputs.size() / sampler.inputs.size();
-                        nodes[channel.node_id].weights.resize(weights_size, 0);
-                        for (int j = 0; j < weights_size; j++) {
-                            float start_weight = sampler.outputs[start_index * weights_size + j].x;
-                            float end_weight = sampler.outputs[end_index * weights_size + j].x;
-                            nodes[channel.node_id].weights[j] = lerp(start_weight, end_weight, u);
+                    if (sampler.interpolation == INTERPOLATION_TYPE::LINEAR) {
+                        if (channel.path_type == PATH_TYPE::TRANSLATION) {
+                            vec3 start_translation = sampler.outputs[start_index];
+                            vec3 end_translation = sampler.outputs[end_index];
+                            nodes[channel.node_id].translate = lerp(start_translation, end_translation, u);
+                        } else if (channel.path_type == PATH_TYPE::SCALE) {
+                            vec3 start_scale = sampler.outputs[start_index];
+                            vec3 end_scale = sampler.outputs[end_index];
+                            nodes[channel.node_id].scale = lerp(start_scale, end_scale, u);
+                        } else if (channel.path_type == PATH_TYPE::ROTATION) {
+                            auto start_rotation = sampler.outputs[start_index];
+                            auto end_rotation = sampler.outputs[end_index];
+                            quat start_quat = quat(start_rotation.w, start_rotation.x, start_rotation.y,
+                                                   start_rotation.z);
+                            quat end_quat = quat(end_rotation.w, end_rotation.x, end_rotation.y, end_rotation.z);
+                            nodes[channel.node_id].rotate = glm::slerp(start_quat, end_quat, u);
+                        } else if (channel.path_type == PATH_TYPE::WEIGHTS) {
+                            int weights_size = sampler.outputs.size() / sampler.inputs.size();
+                            nodes[channel.node_id].weights.resize(weights_size, 0);
+                            for (int j = 0; j < weights_size; j++) {
+                                float start_weight = sampler.outputs[start_index * weights_size + j].x;
+                                float end_weight = sampler.outputs[end_index * weights_size + j].x;
+                                nodes[channel.node_id].weights[j] = lerp(start_weight, end_weight, u);
+                            }
                         }
+                    } else {
+                        throw std::runtime_error("Failed to update animation of type : (" + to_string(int(sampler.interpolation)) + ")");
                     }
                     updated = true;
                    break;
@@ -1097,11 +1096,28 @@ void Model::UpdateNode(Shader shader, int node_id)
                 mesh.joint_matrices[i] = joint_mat;
             }
             glUniform1i(glGetUniformLocation(shader.Program, "bSkin"), 1);
+            if(mesh.material_id > -1)
+            {
+                const Material& material = materials[mesh.material_id];
+                /* NOTE: use only diffuse texture */
+                if(material.extension.diffuse_texture_id > -1)
+                {
+                    textures[material.extension.diffuse_texture_id].BindTexture();
+                }
+            }
             mesh.Render(shader, IsAnimated(), true, node.weights);
         } else {
             glUniform1i(glGetUniformLocation(shader.Program, "bSkin"), 0);
+            if(mesh.material_id > -1)
+            {
+                const Material& material = materials[mesh.material_id];
+                /* NOTE: use only diffuse texture */
+                if(material.extension.diffuse_texture_id > -1)
+                {
+                    textures[material.extension.diffuse_texture_id].BindTexture();
+                }
+            }
             mesh.Render(shader, false, false, node.weights);
-//            cout << "Not a skin mesh" << endl;
         }
     }
 

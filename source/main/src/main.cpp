@@ -47,6 +47,7 @@ void RenderLoop()
     Shader animationShader("../shaders/skin/model.vert", "../shaders/skin/model.frag");
     animationShader.Use();
     animationShader.setMat4("projection", projection);
+    animationShader.setInt("diffuse_texture", 0);
 
     GLenum err;
     while((err = glGetError()) != GL_NO_ERROR)
@@ -71,6 +72,7 @@ void RenderLoop()
         animationShader.Use();
         animationShader.setMat4("view", view);
         animationShader.setMat4("pre_view", pre_view);
+        glActiveTexture(GL_TEXTURE0);
         girlModel.Update(animationShader, currentFrame);
 
         // Swap the screen buffers, Check and call events
