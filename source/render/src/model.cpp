@@ -373,7 +373,6 @@ Mesh LoadglTFMesh(const tinygltf::Model &gltf_model, const tinygltf::Mesh &gltf_
                 }
             }
         }
-
     } // for each primitive in glTF mesh
 
     return mesh;
@@ -1069,8 +1068,6 @@ void Model::UpdateAnimation(Shader shader, double duration)
                 if (u <= 1.0f)
                 {
                     /* NOTE: use the previous sampler output information of the current frame              */
-                    /* TODO: interpolate the sampler output information before and after the current frame */
-                    /*       using the interpolation information stored in the sampler                     */
                     if (sampler.interpolation == INTERPOLATION_TYPE::LINEAR)
                     {
                         if (channel.path_type == PATH_TYPE::TRANSLATION)
@@ -1107,6 +1104,8 @@ void Model::UpdateAnimation(Shader shader, double duration)
                     }
                     else
                     {
+                        /* TODO: interpolate the sampler output information before and after the current frame */
+                        /*       using the interpolation information stored in the sampler                     */
                         throw std::runtime_error("Unimplement animation interpolation type.");
                     }
                     updated = true;
