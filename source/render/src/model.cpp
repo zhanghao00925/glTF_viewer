@@ -149,12 +149,9 @@ Mesh LoadglTFMesh(const tinygltf::Model &gltf_model, const tinygltf::Mesh &gltf_
             }
         }
 
-        mesh.vertices.resize(mesh.indices.size());
         for (const auto &attribute : primitive.attributes)
         {
             /* load vertices data */
-            /* NOTE: render witout using an index buffer      */
-            /* TODO: change to use index buffer for rendering */
             {
                 const auto &accessor = gltf_model.accessors[attribute.second];
                 const auto &buffer_view = gltf_model.bufferViews[accessor.bufferView];
@@ -164,28 +161,23 @@ Mesh LoadglTFMesh(const tinygltf::Model &gltf_model, const tinygltf::Mesh &gltf_
                 const auto byte_stride = accessor.ByteStride(buffer_view);
                 const auto count = accessor.count;
 
+                mesh.vertices.resize(count);
                 if (attribute.first == "POSITION")
                 {
                     if (accessor.type == TINYGLTF_TYPE_VEC3)
                     {
                         if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT)
                         {
-                            for (std::size_t i = 0; i < mesh.indices.size(); ++i)
+                            for (std::size_t i = 0; i < count; ++i)
                             {
-                                auto face = mesh.indices[i];
-                                mesh.vertices[i].position.x = *(reinterpret_cast<const float *>(data_address + 0 * sizeof(float) + face * byte_stride));
-                                mesh.vertices[i].position.y = *(reinterpret_cast<const float *>(data_address + 1 * sizeof(float) + face * byte_stride));
-                                mesh.vertices[i].position.z = *(reinterpret_cast<const float *>(data_address + 2 * sizeof(float) + face * byte_stride));
+                                mesh.vertices[i].position = make_vec3(reinterpret_cast<const float *>(data_address + i * byte_stride));
                             }
                         }
                         else if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_DOUBLE)
                         {
-                            for (std::size_t i = 0; i < mesh.indices.size(); ++i)
+                            for (std::size_t i = 0; i < count; ++i)
                             {
-                                auto face = mesh.indices[i];
-                                mesh.vertices[i].position.x = *(reinterpret_cast<const double *>(data_address + 0 * sizeof(double) + face * byte_stride));
-                                mesh.vertices[i].position.y = *(reinterpret_cast<const double *>(data_address + 1 * sizeof(double) + face * byte_stride));
-                                mesh.vertices[i].position.z = *(reinterpret_cast<const double *>(data_address + 2 * sizeof(double) + face * byte_stride));
+                                mesh.vertices[i].position = make_vec3(reinterpret_cast<const double *>(data_address + i * byte_stride));
                             }
                         }
                         else
@@ -204,22 +196,16 @@ Mesh LoadglTFMesh(const tinygltf::Model &gltf_model, const tinygltf::Mesh &gltf_
                     {
                         if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT)
                         {
-                            for (std::size_t i = 0; i < mesh.indices.size(); ++i)
+                            for (std::size_t i = 0; i < count; ++i)
                             {
-                                auto face = mesh.indices[i];
-                                mesh.vertices[i].normal.x = *(reinterpret_cast<const float *>(data_address + 0 * sizeof(float) + face * byte_stride));
-                                mesh.vertices[i].normal.y = *(reinterpret_cast<const float *>(data_address + 1 * sizeof(float) + face * byte_stride));
-                                mesh.vertices[i].normal.z = *(reinterpret_cast<const float *>(data_address + 2 * sizeof(float) + face * byte_stride));
+                                mesh.vertices[i].normal = make_vec3(reinterpret_cast<const float *>(data_address + i * byte_stride));
                             }
                         }
                         else if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_DOUBLE)
                         {
-                            for (std::size_t i = 0; i < mesh.indices.size(); ++i)
+                            for (std::size_t i = 0; i < count; ++i)
                             {
-                                auto face = mesh.indices[i];
-                                mesh.vertices[i].normal.x = *(reinterpret_cast<const double *>(data_address + 0 * sizeof(double) + face * byte_stride));
-                                mesh.vertices[i].normal.y = *(reinterpret_cast<const double *>(data_address + 1 * sizeof(double) + face * byte_stride));
-                                mesh.vertices[i].normal.z = *(reinterpret_cast<const double *>(data_address + 2 * sizeof(double) + face * byte_stride));
+                                mesh.vertices[i].normal = make_vec3(reinterpret_cast<const double *>(data_address + i * byte_stride));
                             }
                         }
                         else
@@ -238,20 +224,16 @@ Mesh LoadglTFMesh(const tinygltf::Model &gltf_model, const tinygltf::Mesh &gltf_
                     {
                         if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT)
                         {
-                            for (std::size_t i = 0; i < mesh.indices.size(); ++i)
+                            for (std::size_t i = 0; i < count; ++i)
                             {
-                                auto face = mesh.indices[i];
-                                mesh.vertices[i].texcoord.x = *(reinterpret_cast<const float *>(data_address + 0 * sizeof(float) + face * byte_stride));
-                                mesh.vertices[i].texcoord.y = *(reinterpret_cast<const float *>(data_address + 1 * sizeof(float) + face * byte_stride));
+                                mesh.vertices[i].texcoord = make_vec2(reinterpret_cast<const float *>(data_address + i * byte_stride));
                             }
                         }
                         else if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_DOUBLE)
                         {
-                            for (std::size_t i = 0; i < mesh.indices.size(); ++i)
+                            for (std::size_t i = 0; i < count; ++i)
                             {
-                                auto face = mesh.indices[i];
-                                mesh.vertices[i].texcoord.x = *(reinterpret_cast<const double *>(data_address + 0 * sizeof(double) + face * byte_stride));
-                                mesh.vertices[i].texcoord.y = *(reinterpret_cast<const double *>(data_address + 1 * sizeof(double) + face * byte_stride));
+                                mesh.vertices[i].texcoord = make_vec2(reinterpret_cast<const double *>(data_address + i * byte_stride));
                             }
                         }
                         else
@@ -270,13 +252,9 @@ Mesh LoadglTFMesh(const tinygltf::Model &gltf_model, const tinygltf::Mesh &gltf_
                     {
                         if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_SHORT || accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT)
                         {
-                            for (std::size_t i = 0; i < mesh.indices.size(); ++i)
+                            for (std::size_t i = 0; i < count; ++i)
                             {
-                                auto face = mesh.indices[i];
-                                mesh.vertices[i].joint.x = *(reinterpret_cast<const short *>(data_address + 0 * sizeof(short) + face * byte_stride));
-                                mesh.vertices[i].joint.y = *(reinterpret_cast<const short *>(data_address + 1 * sizeof(short) + face * byte_stride));
-                                mesh.vertices[i].joint.z = *(reinterpret_cast<const short *>(data_address + 2 * sizeof(short) + face * byte_stride));
-                                mesh.vertices[i].joint.w = *(reinterpret_cast<const short *>(data_address + 3 * sizeof(short) + face * byte_stride));
+                                mesh.vertices[i].joint = make_vec4(reinterpret_cast<const short *>(data_address + i * byte_stride));
                             }
                         }
                         else
@@ -295,24 +273,16 @@ Mesh LoadglTFMesh(const tinygltf::Model &gltf_model, const tinygltf::Mesh &gltf_
                     {
                         if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT)
                         {
-                            for (std::size_t i = 0; i < mesh.indices.size(); ++i)
+                            for (std::size_t i = 0; i < count; ++i)
                             {
-                                auto face = mesh.indices[i];
-                                mesh.vertices[i].weight.x = *(reinterpret_cast<const float *>(data_address + 0 * sizeof(float) + face * byte_stride));
-                                mesh.vertices[i].weight.y = *(reinterpret_cast<const float *>(data_address + 1 * sizeof(float) + face * byte_stride));
-                                mesh.vertices[i].weight.z = *(reinterpret_cast<const float *>(data_address + 2 * sizeof(float) + face * byte_stride));
-                                mesh.vertices[i].weight.w = *(reinterpret_cast<const float *>(data_address + 3 * sizeof(float) + face * byte_stride));
+                                mesh.vertices[i].weight = make_vec4(reinterpret_cast<const float *>(data_address + i * byte_stride));
                             }
                         }
                         else if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_DOUBLE)
                         {
-                            for (std::size_t i = 0; i < mesh.indices.size(); ++i)
+                            for (std::size_t i = 0; i < count; ++i)
                             {
-                                auto face = mesh.indices[i];
-                                mesh.vertices[i].weight.x = *(reinterpret_cast<const double *>(data_address + 0 * sizeof(double) + face * byte_stride));
-                                mesh.vertices[i].weight.y = *(reinterpret_cast<const double *>(data_address + 1 * sizeof(double) + face * byte_stride));
-                                mesh.vertices[i].weight.z = *(reinterpret_cast<const double *>(data_address + 2 * sizeof(double) + face * byte_stride));
-                                mesh.vertices[i].weight.w = *(reinterpret_cast<const double *>(data_address + 3 * sizeof(double) + face * byte_stride));
+                                mesh.vertices[i].weight = make_vec4(reinterpret_cast<const double *>(data_address + i * byte_stride));
                             }
                         }
                         else
@@ -333,7 +303,6 @@ Mesh LoadglTFMesh(const tinygltf::Model &gltf_model, const tinygltf::Mesh &gltf_
         for (int i = 0; i < NUM_MORPH_TARGETS; i++)
         {
             const int NUM_INDICES = mesh.indices.size();
-            mesh.morph_vertices[i].resize(NUM_INDICES);
             for (const auto &attribute : primitive.targets[i])
             {
                 {
@@ -344,30 +313,23 @@ Mesh LoadglTFMesh(const tinygltf::Model &gltf_model, const tinygltf::Mesh &gltf_
                     const auto byte_stride = accessor.ByteStride(buffer_view);
                     const auto count = accessor.count;
 
+                    mesh.morph_vertices[i].resize(count);
                     if (attribute.first == "POSITION")
                     {
                         if (accessor.type == TINYGLTF_TYPE_VEC3)
                         {
                             if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT)
                             {
-                                for (std::size_t j = 0; j < mesh.indices.size(); ++j)
+                                for (std::size_t j = 0; j < count; ++j)
                                 {
-                                    auto face = mesh.indices[j];
-                                    mesh.morph_vertices[i][j].position.x = *(reinterpret_cast<const float *>(data_address + 0 * sizeof(float) + face * byte_stride));
-                                    mesh.morph_vertices[i][j].position.y = *(reinterpret_cast<const float *>(data_address + 1 * sizeof(float) + face * byte_stride));
-                                    mesh.morph_vertices[i][j].position.z = *(reinterpret_cast<const float *>(data_address + 2 * sizeof(float) + face * byte_stride));
-                                    //                                    cout << mesh.morph_vertices[j][i].position.x << ", " << mesh.morph_vertices[j][i].position.y << ", " << mesh.morph_vertices[j][i].position.z << endl;
+                                    mesh.morph_vertices[i][j].position = make_vec4(reinterpret_cast<const float *>(data_address + j * byte_stride));
                                 }
                             }
                             else if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_DOUBLE)
                             {
-                                for (std::size_t j = 0; j < mesh.indices.size(); ++j)
+                                for (std::size_t j = 0; j < count; ++j)
                                 {
-                                    auto face = mesh.indices[j];
-                                    mesh.morph_vertices[i][j].position.x = *(reinterpret_cast<const double *>(data_address + 0 * sizeof(double) + face * byte_stride));
-                                    mesh.morph_vertices[i][j].position.y = *(reinterpret_cast<const double *>(data_address + 1 * sizeof(double) + face * byte_stride));
-                                    mesh.morph_vertices[i][j].position.z = *(reinterpret_cast<const double *>(data_address + 2 * sizeof(double) + face * byte_stride));
-                                    //                                    cout << mesh.morph_vertices[j][i].position.x << ", " << mesh.morph_vertices[j][i].position.y << ", " << mesh.morph_vertices[j][i].position.z << endl;
+                                    mesh.morph_vertices[i][j].position = make_vec4(reinterpret_cast<const double *>(data_address + j * byte_stride));
                                 }
                             }
                             else
@@ -378,6 +340,34 @@ Mesh LoadglTFMesh(const tinygltf::Model &gltf_model, const tinygltf::Mesh &gltf_
                         else
                         {
                             throw std::runtime_error("Undefined \'POSITION\' attribute type.");
+                        }
+                    }
+                    else if (attribute.first == "NORMAL")
+                    {
+                        if (accessor.type == TINYGLTF_TYPE_VEC3)
+                        {
+                            if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT)
+                            {
+                                for (std::size_t j = 0; j < count; ++j)
+                                {
+                                    mesh.morph_vertices[i][j].normal = make_vec4(reinterpret_cast<const float *>(data_address + j * byte_stride));
+                                }
+                            }
+                            else if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_DOUBLE)
+                            {
+                                for (std::size_t j = 0; j < count; ++j)
+                                {
+                                    mesh.morph_vertices[i][j].normal = make_vec4(reinterpret_cast<const double *>(data_address + j * byte_stride));
+                                }
+                            }
+                            else
+                            {
+                                throw std::runtime_error("Undefined \'NORMAL\' attribute component type.");
+                            }
+                        }
+                        else
+                        {
+                            throw std::runtime_error("Undefined \'NORMAL\' attribute type.");
                         }
                     }
                 }
@@ -599,11 +589,7 @@ Animation LoadglTFAnimation(const tinygltf::Model &gltf_model, const tinygltf::A
                     anim_sampler.outputs.reserve(count);
                     for (std::size_t i = 0; i < count; ++i)
                     {
-                        float x = *(reinterpret_cast<const float *>(data_address + 0 * sizeof(float) + i * byte_stride));
-                        float y = *(reinterpret_cast<const float *>(data_address + 1 * sizeof(float) + i * byte_stride));
-                        float z = *(reinterpret_cast<const float *>(data_address + 2 * sizeof(float) + i * byte_stride));
-                        float w = 0.0f;
-                        anim_sampler.outputs.emplace_back(x, y, z, w);
+                        anim_sampler.outputs.emplace_back(make_vec3(reinterpret_cast<const float *>(data_address + i * byte_stride)), 0);
                     }
                 }
                 else if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_DOUBLE)
@@ -611,11 +597,7 @@ Animation LoadglTFAnimation(const tinygltf::Model &gltf_model, const tinygltf::A
                     anim_sampler.outputs.reserve(count);
                     for (std::size_t i = 0; i < count; ++i)
                     {
-                        double x = *(reinterpret_cast<const double *>(data_address + 0 * sizeof(double) + i * byte_stride));
-                        double y = *(reinterpret_cast<const double *>(data_address + 1 * sizeof(double) + i * byte_stride));
-                        double z = *(reinterpret_cast<const double *>(data_address + 2 * sizeof(double) + i * byte_stride));
-                        double w = 0.0f;
-                        anim_sampler.outputs.emplace_back(x, y, z, w);
+                        anim_sampler.outputs.emplace_back(make_vec3(reinterpret_cast<const double *>(data_address + i * byte_stride)), 0);
                     }
                 }
                 else
@@ -630,11 +612,7 @@ Animation LoadglTFAnimation(const tinygltf::Model &gltf_model, const tinygltf::A
                     anim_sampler.outputs.reserve(count);
                     for (std::size_t i = 0; i < count; ++i)
                     {
-                        float x = *(reinterpret_cast<const float *>(data_address + 0 * sizeof(float) + i * byte_stride));
-                        float y = *(reinterpret_cast<const float *>(data_address + 1 * sizeof(float) + i * byte_stride));
-                        float z = *(reinterpret_cast<const float *>(data_address + 2 * sizeof(float) + i * byte_stride));
-                        float w = *(reinterpret_cast<const float *>(data_address + 3 * sizeof(float) + i * byte_stride));
-                        anim_sampler.outputs.emplace_back(x, y, z, w);
+                        anim_sampler.outputs.emplace_back(make_vec4(reinterpret_cast<const float *>(data_address + i * byte_stride)));
                     }
                 }
                 else if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_DOUBLE)
@@ -642,11 +620,7 @@ Animation LoadglTFAnimation(const tinygltf::Model &gltf_model, const tinygltf::A
                     anim_sampler.outputs.reserve(count);
                     for (std::size_t i = 0; i < count; ++i)
                     {
-                        double x = *(reinterpret_cast<const double *>(data_address + 0 * sizeof(double) + i * byte_stride));
-                        double y = *(reinterpret_cast<const double *>(data_address + 1 * sizeof(double) + i * byte_stride));
-                        double z = *(reinterpret_cast<const double *>(data_address + 2 * sizeof(double) + i * byte_stride));
-                        double w = *(reinterpret_cast<const double *>(data_address + 3 * sizeof(double) + i * byte_stride));
-                        anim_sampler.outputs.emplace_back(x, y, z, w);
+                        anim_sampler.outputs.emplace_back(make_vec4(reinterpret_cast<const double *>(data_address + i * byte_stride)));
                     }
                 }
                 else
@@ -661,8 +635,7 @@ Animation LoadglTFAnimation(const tinygltf::Model &gltf_model, const tinygltf::A
                     anim_sampler.outputs.reserve(count);
                     for (std::size_t i = 0; i < count; ++i)
                     {
-                        float x = *(reinterpret_cast<const float *>(data_address + i * byte_stride));
-                        anim_sampler.outputs.emplace_back(x);
+                        anim_sampler.outputs.emplace_back(*(reinterpret_cast<const float *>(data_address + i * byte_stride)), 0, 0, 0);
                     }
                 }
                 else if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_DOUBLE)
@@ -670,8 +643,7 @@ Animation LoadglTFAnimation(const tinygltf::Model &gltf_model, const tinygltf::A
                     anim_sampler.outputs.reserve(count);
                     for (std::size_t i = 0; i < count; ++i)
                     {
-                        double x = *(reinterpret_cast<const double *>(data_address + i * byte_stride));
-                        anim_sampler.outputs.emplace_back(x);
+                        anim_sampler.outputs.emplace_back(*(reinterpret_cast<const double *>(data_address + i * byte_stride)), 0, 0, 0);
                     }
                 }
                 else
@@ -1099,36 +1071,43 @@ void Model::UpdateAnimation(Shader shader, double duration)
                     /* NOTE: use the previous sampler output information of the current frame              */
                     /* TODO: interpolate the sampler output information before and after the current frame */
                     /*       using the interpolation information stored in the sampler                     */
-                    if (channel.path_type == PATH_TYPE::TRANSLATION)
+                    if (sampler.interpolation == INTERPOLATION_TYPE::LINEAR)
                     {
-                        vec3 start_translation = sampler.outputs[start_index];
-                        vec3 end_translation = sampler.outputs[end_index];
-                        nodes[channel.node_id].translate = lerp(start_translation, end_translation, u);
-                    }
-                    else if (channel.path_type == PATH_TYPE::SCALE)
-                    {
-                        vec3 start_scale = sampler.outputs[start_index];
-                        vec3 end_scale = sampler.outputs[end_index];
-                        nodes[channel.node_id].scale = lerp(start_scale, end_scale, u);
-                    }
-                    else if (channel.path_type == PATH_TYPE::ROTATION)
-                    {
-                        auto start_rotation = sampler.outputs[start_index];
-                        auto end_rotation = sampler.outputs[end_index];
-                        quat start_quat = quat(start_rotation.w, start_rotation.x, start_rotation.y, start_rotation.z);
-                        quat end_quat = quat(end_rotation.w, end_rotation.x, end_rotation.y, end_rotation.z);
-                        nodes[channel.node_id].rotate = glm::slerp(start_quat, end_quat, u);
-                    }
-                    else if (channel.path_type == PATH_TYPE::WEIGHTS)
-                    {
-                        int weights_size = sampler.outputs.size() / sampler.inputs.size();
-                        nodes[channel.node_id].weights.resize(weights_size, 0);
-                        for (int j = 0; j < weights_size; j++)
+                        if (channel.path_type == PATH_TYPE::TRANSLATION)
                         {
-                            float start_weight = sampler.outputs[start_index * weights_size + j].x;
-                            float end_weight = sampler.outputs[end_index * weights_size + j].x;
-                            nodes[channel.node_id].weights[j] = lerp(start_weight, end_weight, u);
+                            vec3 start_translation = sampler.outputs[start_index];
+                            vec3 end_translation = sampler.outputs[end_index];
+                            nodes[channel.node_id].translate = lerp(start_translation, end_translation, u);
                         }
+                        else if (channel.path_type == PATH_TYPE::SCALE)
+                        {
+                            vec3 start_scale = sampler.outputs[start_index];
+                            vec3 end_scale = sampler.outputs[end_index];
+                            nodes[channel.node_id].scale = lerp(start_scale, end_scale, u);
+                        }
+                        else if (channel.path_type == PATH_TYPE::ROTATION)
+                        {
+                            auto start_rotation = sampler.outputs[start_index];
+                            auto end_rotation = sampler.outputs[end_index];
+                            quat start_quat = quat(start_rotation.w, start_rotation.x, start_rotation.y, start_rotation.z);
+                            quat end_quat = quat(end_rotation.w, end_rotation.x, end_rotation.y, end_rotation.z);
+                            nodes[channel.node_id].rotate = glm::slerp(start_quat, end_quat, u);
+                        }
+                        else if (channel.path_type == PATH_TYPE::WEIGHTS)
+                        {
+                            int weights_size = sampler.outputs.size() / sampler.inputs.size();
+                            nodes[channel.node_id].weights.resize(weights_size, 0);
+                            for (int j = 0; j < weights_size; j++)
+                            {
+                                float start_weight = sampler.outputs[start_index * weights_size + j].x;
+                                float end_weight = sampler.outputs[end_index * weights_size + j].x;
+                                nodes[channel.node_id].weights[j] = lerp(start_weight, end_weight, u);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        throw std::runtime_error("Unimplement animation interpolation type.");
                     }
                     updated = true;
                     break;

@@ -133,6 +133,6 @@ void Mesh::Render(Shader shader, bool is_animation, bool is_skin, vector<float> 
     }
 
     glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, indices.size());
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
