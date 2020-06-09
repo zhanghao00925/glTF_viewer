@@ -43,11 +43,10 @@ void RenderLoop()
                                             NEAR, FAR);
 
    Model girlModel("../assets/sci-fi_girl/scene.gltf");
-    // GLTFModel girlModel("../assets/buster_drone/scene.gltf");
+    // Model girlModel("../assets/buster_drone/scene.gltf");
     Shader animationShader("../shaders/skin/model.vert", "../shaders/skin/model.frag");
     animationShader.Use();
     animationShader.setMat4("projection", projection);
-    animationShader.setInt("diffuse_texture", 0);
 
     GLenum err;
     while((err = glGetError()) != GL_NO_ERROR)
@@ -72,7 +71,6 @@ void RenderLoop()
         animationShader.Use();
         animationShader.setMat4("view", view);
         animationShader.setMat4("pre_view", pre_view);
-        glActiveTexture(GL_TEXTURE0);
         girlModel.Update(currentFrame);
         girlModel.Render(animationShader);
 

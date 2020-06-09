@@ -138,7 +138,7 @@ void main()
     if (alpha_mode == 1 && alpha < alpha_cutoff) {
         discard;
     }
-    if (alpha_mode == 2 && alpha < 0.1) {
+    if (alpha_mode == 2 && alpha < 0.15) {
         discard;
     }
     // normal
