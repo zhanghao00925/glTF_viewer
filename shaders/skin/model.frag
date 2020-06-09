@@ -12,7 +12,6 @@ void main()
 {                                    
     vec3 normal  = normalize(Normal);
                             
-    FragColor = vec4(texture(diffuse_texture, TexCoords).rgb, 1.0);                                                                
-    // FragColor = vec4(0.5f * (In.Normal + vec3(1.0)), 1);     
-    // FragColor = vec4(1.0f);     
+//    FragColor = vec4(texture(diffuse_texture, TexCoords).rgb, 1.0);
+     FragColor = vec4(0.5f * (Normal + vec3(1.0)), 1);
 }

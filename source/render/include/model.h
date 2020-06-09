@@ -21,6 +21,7 @@
 #include "animation.h"
 #include "texture.h"
 #include "material.h"
+#include "tiny_gltf.h"
 
 #include "render_core.h"
 /***********************/

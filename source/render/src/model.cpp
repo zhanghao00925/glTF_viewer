@@ -737,146 +737,85 @@ Material LoadglTFMaterial(const tinygltf::Model &gltf_model, const tinygltf::Mat
     Material material;
 
     {
-        auto base_color_texture_id = gltf_material.values.find("baseColorTexture");
-        if (base_color_texture_id != gltf_material.values.end())
-        {
-            material.base_color_texture_id = base_color_texture_id->second.TextureIndex();
-            material.texture_coordinate_sets.base_color = static_cast<unsigned char>(base_color_texture_id->second.TextureTexCoord());
+        // emiisive factor
+        material.emissive_factor = make_vec3(gltf_material.emissiveFactor.data());
+        // alpha mode
+        if (gltf_material.alphaMode == "BLEND") {
+            material.alpha_mode = ALPHA_MODE::ALPHA_MODE_BLEND;
+        } else if (gltf_material.alphaMode == "MASK") {
+            material.alpha_mode = ALPHA_MODE::ALPHA_MODE_MASK;
+        } else {
+            material.alpha_mode = ALPHA_MODE::ALPHA_MODE_OPAQUE;
         }
+        // alpha cutoff
+        material.alpha_cutoff = gltf_material.alphaCutoff;
+        // double sided
+        material.double_sided = gltf_material.doubleSided;
+        // PBR Metallic Roughness
+        material.pbrMetallicRoughness = gltf_material.pbrMetallicRoughness;
+        // Emissive Texture
+        material.emissiveTexture = gltf_material.emissiveTexture;
+        // Normal Texture
+        material.normalTexture = gltf_material.normalTexture;
+        // Occlusion Texture
+        material.occlusionTexture = gltf_material.occlusionTexture;
     }
-
-    {
-        auto metallic_roughness_texture = gltf_material.values.find("metallicRoughnessTexture");
-        if (metallic_roughness_texture != gltf_material.values.end())
-        {
-            material.metallic_roughness_texture_id = metallic_roughness_texture->second.TextureIndex();
-            material.texture_coordinate_sets.metallic_roughness = static_cast<unsigned char>(metallic_roughness_texture->second.TextureTexCoord());
-        }
-    }
-
-    {
-        auto roughness_factor = gltf_material.values.find("roughnessFactor");
-        if (roughness_factor != gltf_material.values.end())
-        {
-            material.roughness_factor = static_cast<float>(roughness_factor->second.Factor());
-        }
-    }
-
-    {
-        auto metallic_factor = gltf_material.values.find("metallicFactor");
-        if (metallic_factor != gltf_material.values.end())
-        {
-            material.metallic_factor = static_cast<float>(metallic_factor->second.Factor());
-        }
-    }
-
-    {
-        auto base_color_factor = gltf_material.values.find("baseColorFactor");
-        if (base_color_factor != gltf_material.values.end())
-        {
-            material.base_color_factor = make_vec4(base_color_factor->second.ColorFactor().data());
-        }
-    }
-
-    {
-        auto normal_texture = gltf_material.additionalValues.find("normalTexture");
-        if (normal_texture != gltf_material.additionalValues.end())
-        {
-            material.normal_texture_id = normal_texture->second.TextureIndex();
-            material.texture_coordinate_sets.normal = static_cast<unsigned char>(normal_texture->second.TextureTexCoord());
-        }
-    }
-
-    {
-        auto emissive_texture = gltf_material.additionalValues.find("emissiveTexture");
-        if (emissive_texture != gltf_material.additionalValues.end())
-        {
-            material.emissive_texture_id = emissive_texture->second.TextureIndex();
-            material.texture_coordinate_sets.emissive = static_cast<unsigned char>(emissive_texture->second.TextureTexCoord());
-        }
-    }
-
-    {
-        auto occlusion_texture = gltf_material.additionalValues.find("occlusionTexture");
-        if (occlusion_texture != gltf_material.additionalValues.end())
-        {
-            material.occlusion_texture_id = occlusion_texture->second.TextureIndex();
-            material.texture_coordinate_sets.occlusion = static_cast<unsigned char>(occlusion_texture->second.TextureTexCoord());
-        }
-    }
-
-    {
-        auto alpha_mode = gltf_material.additionalValues.find("alphaMode");
-        if (alpha_mode != gltf_material.additionalValues.end())
-        {
-            const tinygltf::Parameter &param = alpha_mode->second;
-            if (param.string_value == "BLEND")
-            {
-                material.alpha_mode = ALPHA_MODE::ALPHA_MODE_BLEND;
-            }
-            else if (param.string_value == "MASK")
-            {
-                material.alpha_mode = ALPHA_MODE::ALPHA_MODE_MASK;
-                material.alpha_cutoff = 0.5f;
-            }
-        }
-    }
-
-    {
-        auto alpha_cutoff = gltf_material.additionalValues.find("alphaCutoff");
-        if (alpha_cutoff != gltf_material.additionalValues.end())
-        {
-            material.alpha_cutoff = static_cast<float>(alpha_cutoff->second.Factor());
-        }
-    }
-
-    {
-        auto emissive_factor = gltf_material.additionalValues.find("emissiveFactor");
-        if (emissive_factor != gltf_material.additionalValues.end())
-        {
-            material.emissive_factor = vec4(make_vec3(emissive_factor->second.ColorFactor().data()), 1.0f);
-        }
-    }
-
     // extensions
     {
-        auto extension = gltf_material.extensions.find("KHR_materials_pbrSpecularGlossiness");
-        if (extension != gltf_material.extensions.end())
-        {
-            if (extension->second.Has("specularGlossinessTexture"))
-            {
-                material.extension.specular_glossiness_texture_id = extension->second.Get("specularGlossinessTexture").Get("index").Get<int>();
-                material.texture_coordinate_sets.specular_glossiness = static_cast<unsigned char>(extension->second.Get("specularGlossinessTexture").Get("texCoord").Get<int>());
-                material.work_flow = PBR_WORK_FLOW::SPECULAR_GLOSSINESS;
-            }
-
-            if (extension->second.Has("diffuseTexture"))
-            {
-                material.extension.diffuse_texture_id = extension->second.Get("diffuseTexture").Get("index").Get<int>();
-            }
-
-            if (extension->second.Has("diffuseFactor"))
-            {
-                auto factor = extension->second.Get("diffuseFactor");
-                for (std::size_t i = 0; i < factor.ArrayLen(); ++i)
+        for (const auto & extension : gltf_material.extensions) {
+            // TODO : Using a smarter solution
+            if (extension.first == "KHR_materials_pbrSpecularGlossiness") {
+                auto extension_ptr = make_shared<KHR_materials_pbrSpecularGlossiness>();
                 {
-                    auto value = factor.Get(i);
-                    material.extension.diffuse_factor[i] = value.IsNumber() ? static_cast<float>(value.Get<double>()) : static_cast<float>(value.Get<int>());
+                    // Diffuse Factor
+                    auto factor = extension.second.Get("diffuseFactor");
+                    for (std::size_t i = 0; i < factor.ArrayLen(); ++i) {
+                        auto value = factor.Get(i);
+                        extension_ptr->diffuse_factor[i] = value.IsNumber() ? static_cast<float>(value.Get<double>())
+                                                                            : static_cast<float>(value.Get<int>());
+                    }
                 }
-            }
-
-            if (extension->second.Has("specularFactor"))
-            {
-                auto factor = extension->second.Get("specularFactor");
-                for (std::size_t i = 0; i < factor.ArrayLen(); ++i)
                 {
-                    auto value = factor.Get(i);
-                    material.extension.specular_factor[i] = value.IsNumber() ? static_cast<float>(value.Get<double>()) : static_cast<float>(value.Get<int>());
+                    // Diffuse Texture
+                    if (extension.second.Get("diffuseTexture").IsObject()) {
+                        extension_ptr->diffuse_texture.index = extension.second.Get("diffuseTexture").Get(
+                                "index").Get<int>();
+                        extension_ptr->diffuse_texture.texCoord = extension.second.Get("diffuseTexture").Get(
+                                "texCoord").Get<int>();
+                    }
                 }
+                {
+                    // Specular Factor
+                    auto factor = extension.second.Get("specularFactor");
+                    for (std::size_t i = 0; i < factor.ArrayLen(); ++i) {
+                        auto value = factor.Get(i);
+                        extension_ptr->specular_factor[i] = value.IsNumber() ? static_cast<float>(value.Get<double>())
+                                                                             : static_cast<float>(value.Get<int>());
+                    }
+                }
+                {
+                    // Glossiness Factor
+                    auto value = extension.second.Get("glossinessFactor");
+                    extension_ptr->glossinessFactor = extension.second.Get("glossinessFactor").IsNumber()
+                                                      ? static_cast<float>(value.Get<double>())
+                                                      : static_cast<float>(value.Get<int>());
+                }
+                {
+                    // Specular Glossiness Texture
+                    if (extension.second.Get("specularGlossinessTexture").IsObject()) {
+                        extension_ptr->specular_glossiness_texture.index = extension.second.Get(
+                                "specularGlossinessTexture").Get("index").Get<int>();
+                        extension_ptr->specular_glossiness_texture.texCoord = extension.second.Get(
+                                "specularGlossinessTexture").Get("texCoord").Get<int>();
+                        material.work_flow = PBR_WORK_FLOW::SPECULAR_GLOSSINESS;
+                    }
+                }
+                material.extensions.push_back(extension_ptr);
+            } else {
+                throw std::runtime_error("Unimplement extension type.");
             }
         }
     }
-
     return material;
 }
 
@@ -935,21 +874,21 @@ void Model::Update(Shader shader, double total_time)
 /* function to render model */
 void Model::Render(Shader shader)
 {
-    for (std::size_t i = 0; i < meshes.size(); ++i)
-    {
-        if (meshes[i].material_id > -1)
-        {
-            const Material &material = materials[meshes[i].material_id];
-
-            /* NOTE: use only diffuse texture */
-            if (material.base_color_texture_id > -1)
-            {
-                textures[material.base_color_texture_id].BindTexture();
-            }
-        }
-
-        meshes[i].Render(shader, IsAnimated(), true);
-    }
+//    for (std::size_t i = 0; i < meshes.size(); ++i)
+//    {
+//        if (meshes[i].material_id > -1)
+//        {
+//            const Material &material = materials[meshes[i].material_id];
+//
+//            /* NOTE: use only diffuse texture */
+//            if (material.base_color_texture_id > -1)
+//            {
+//                textures[material.base_color_texture_id].BindTexture();
+//            }
+//        }
+//
+//        meshes[i].Render(shader, IsAnimated(), true);
+//    }
 }
 
 bool Model::IsAnimated() const
@@ -1145,29 +1084,13 @@ void Model::UpdateNode(Shader shader, int node_id)
                 mesh.joint_matrices[i] = joint_mat;
             }
             glUniform1i(glGetUniformLocation(shader.Program, "bSkin"), 1);
-            if (mesh.material_id > -1)
-            {
-                const Material &material = materials[mesh.material_id];
-                /* NOTE: use only diffuse texture */
-                if (material.extension.diffuse_texture_id > -1)
-                {
-                    textures[material.extension.diffuse_texture_id].BindTexture();
-                }
-            }
+
             mesh.Render(shader, IsAnimated(), true, node.weights);
         }
         else
         {
             glUniform1i(glGetUniformLocation(shader.Program, "bSkin"), 0);
-            if (mesh.material_id > -1)
-            {
-                const Material &material = materials[mesh.material_id];
-                /* NOTE: use only diffuse texture */
-                if (material.extension.diffuse_texture_id > -1)
-                {
-                    textures[material.extension.diffuse_texture_id].BindTexture();
-                }
-            }
+
             mesh.Render(shader, false, false, node.weights);
         }
     }

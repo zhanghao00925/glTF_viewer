@@ -7,7 +7,6 @@
 /**************/
 /*  INCLUDES  */
 /**************/
-#include "texture_coordinate_sets.h"
 #include "extension.h"
 
 /*********************************/
@@ -38,23 +37,19 @@ public:
     Material();
     Material(const Material& other);
 
+    void BindMaterial();
+
 public:
+    vec3 emissive_factor;
     ALPHA_MODE alpha_mode;
-
     float alpha_cutoff;
-    float metallic_factor;
-    float roughness_factor;
-    vec4 base_color_factor;
-    vec4 emissive_factor;
+    bool double_sided;
+    PbrMetallicRoughness pbrMetallicRoughness;
+    NormalTextureInfo normalTexture;
+    OcclusionTextureInfo occlusionTexture;
+    TextureInfo emissiveTexture;
 
-    int base_color_texture_id;
-    int metallic_roughness_texture_id;
-    int normal_texture_id;
-    int occlusion_texture_id;
-    int emissive_texture_id;
-
-    TextureCoordinateSets texture_coordinate_sets;
-    Extension extension;
+    vector<shared_ptr<Extension>> extensions;
 
     PBR_WORK_FLOW work_flow;
 }; // class Material
