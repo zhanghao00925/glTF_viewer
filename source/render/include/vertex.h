@@ -12,11 +12,11 @@
 /************************/
 /*  CLASS NAME: Vertex  */
 /************************/
-class GLTFVertex
+class Vertex
 {
 public:
-    GLTFVertex();
-    GLTFVertex(const GLTFVertex& other);
+    Vertex();
+    Vertex(const Vertex& other);
 
 public:
     vec3 position;

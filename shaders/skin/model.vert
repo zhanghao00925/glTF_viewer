@@ -9,7 +9,7 @@ layout (location = 2) in vec2 texcoord;
 layout (location = 3) in uvec4 joint;
 layout (location = 4) in vec4 weight;
 layout (location = 5) in vec3 position_displace[MAX_MORPHS];
-// layout (location = 10) in vec3 normal_displace[MAX_MORPHS];
+layout (location = 8) in vec3 normal_displace[MAX_MORPHS];
 
 out vec2 TexCoords;
 out vec3 WorldPos;
@@ -42,7 +42,7 @@ void main()
         vec3 final_normal = normal;
         for (int i = 0; i < MAX_MORPHS; i++) {
             final_position += position_displace[i] * morph_weights[i];
-            // final_normal += normal_displace[i] * morph_weights[i];
+            final_normal += normal_displace[i] * morph_weights[i];
         }
         WorldPos = (local_model * vec4(final_position, 1.0)).xyz;
         gl_Position  = projection * view * local_model * vec4(final_position, 1.0);

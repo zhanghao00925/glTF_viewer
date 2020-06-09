@@ -334,11 +334,6 @@ void LoadglTFNode(const tinygltf::Model &gltf_model, const tinygltf::Node &gltf_
         node.scale = make_vec3(gltf_node.scale.data());
     }
 
-    //    // save weight
-    //    for (auto weight : gltf_node.weights) {
-    //        node.weights.push_back(weight);
-    //    }
-
     /* save the loaded node to the node map */
     nodes.insert(std::make_pair(current_id, node));
 
@@ -647,7 +642,7 @@ Material LoadglTFMaterial(const tinygltf::Model &gltf_model, const tinygltf::Mat
                 {
                     // Glossiness Factor
                     auto value = extension.second.Get("glossinessFactor");
-                    extension_ptr->glossinessFactor = extension.second.Get("glossinessFactor").IsNumber()
+                    extension_ptr->glossiness_factor = extension.second.Get("glossinessFactor").IsNumber()
                                                       ? static_cast<float>(value.Get<double>())
                                                       : static_cast<float>(value.Get<int>());
                 }
@@ -658,9 +653,9 @@ Material LoadglTFMaterial(const tinygltf::Model &gltf_model, const tinygltf::Mat
                                 "specularGlossinessTexture").Get("index").Get<int>();
                         extension_ptr->specular_glossiness_texture.texCoord = extension.second.Get(
                                 "specularGlossinessTexture").Get("texCoord").Get<int>();
-                        material.work_flow = PBR_WORK_FLOW::SPECULAR_GLOSSINESS;
                     }
                 }
+                material.work_flow = PBR_WORK_FLOW::SPECULAR_GLOSSINESS;
                 material.extensions.push_back(extension_ptr);
             } else {
                 throw std::runtime_error("Unimplement extension type.");
@@ -722,12 +717,12 @@ void Model::RenderNode(Shader shader, int node_id) {
     auto &node = nodes[node_id];
     if (node.mesh_id > -1) {
         auto &mesh = meshes[node.mesh_id];
+        const auto &material = materials[mesh.material_id];
+        material.BindMaterial(shader, textures);
         if (node.skin_id > -1) {
-            glUniform1i(glGetUniformLocation(shader.Program, "bSkin"), 1);
-            mesh.Render(shader, IsAnimated(), true, node.weights);
+            mesh.Render(shader, true, node.weights);
         } else {
-            glUniform1i(glGetUniformLocation(shader.Program, "bSkin"), 0);
-            mesh.Render(shader, false, false, node.weights);
+            mesh.Render(shader, false, node.weights);
         }
     }
 
@@ -881,7 +876,6 @@ void Model::UpdateAnimation(double duration) {
 
 /* function to update the transformation information of a node */
 void Model::UpdateNode(int node_id) {
-
     auto &node = nodes[node_id];
     if (node.mesh_id > -1) {
         auto &mesh = meshes[node.mesh_id];

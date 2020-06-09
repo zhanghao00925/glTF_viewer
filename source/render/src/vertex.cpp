@@ -4,7 +4,7 @@
 #include "vertex.h"
 
 /* default constructor */
-GLTFVertex::GLTFVertex()
+Vertex::Vertex()
     : position()
     , normal()
     , texcoord()
@@ -13,7 +13,7 @@ GLTFVertex::GLTFVertex()
 { /* empty */ }
 
 /* copy constructor */
-GLTFVertex::GLTFVertex(const GLTFVertex& other)
+Vertex::Vertex(const Vertex& other)
     : position(other.position)
     , normal(other.normal)
     , texcoord(other.texcoord)

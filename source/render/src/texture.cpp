@@ -81,7 +81,7 @@ void Texture::CleanupTexture()
 }
 
 /* function to bind OpenGL texture */
-void Texture::BindTexture()
+void Texture::BindTexture() const
 {
     glBindTexture(GL_TEXTURE_2D, tbo);
 }

@@ -23,7 +23,7 @@ public:
 public:
     void SetupTexture();
     void CleanupTexture();
-    void BindTexture();
+    void BindTexture() const;
 
 public:
     std::string name;

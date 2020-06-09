@@ -29,17 +29,17 @@ public:
 public:
     void SetupMesh();
     void CleanupMesh();
-    void Render(Shader shader, bool is_animation, bool is_skin, vector<float> weights = vector<float>());
+    void Render(Shader shader, bool is_skin, vector<float> weights = vector<float>());
 
 public:
     std::string name;
-    std::vector<GLTFVertex> vertices;
+    std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
     int material_id;
     mat4 matrix;
     mat4 pre_matrix;
-    std::vector<std::vector<GLTFVertex>> morph_vertices;
+    std::vector<std::vector<Vertex>> morph_vertices;
 
     std::array<int, MAX_NUM_MORPHS> morph_indices;
     std::array<int, MAX_NUM_MORPHS> pre_morph_indics;
