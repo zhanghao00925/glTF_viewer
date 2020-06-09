@@ -73,7 +73,8 @@ void RenderLoop()
         animationShader.setMat4("view", view);
         animationShader.setMat4("pre_view", pre_view);
         glActiveTexture(GL_TEXTURE0);
-        girlModel.Update(animationShader, currentFrame);
+        girlModel.Update(currentFrame);
+        girlModel.Render(animationShader);
 
         // Swap the screen buffers, Check and call events
         glfwSwapBuffers(WindowConfig::window);

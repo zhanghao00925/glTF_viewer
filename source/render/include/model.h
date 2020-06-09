@@ -37,7 +37,8 @@ public:
 public:
     void SetupModel();
     void CleanupModel();
-    void Update(Shader shader, double total_time);
+    void Update(double total_time);
+    void RenderNode(Shader shader, int node_id);
     void Render(Shader shader);
 
 public:
@@ -47,8 +48,8 @@ public:
 private:
     void LoadModel(const std::string& file);
     mat4 GetNodeMatrix(int node_id);
-    void UpdateAnimation(Shader shader, double duration);
-    void UpdateNode(Shader shader, int node_id);
+    void UpdateAnimation(double duration);
+    void UpdateNode(int node_id);
 
 private:
     size_t curr_animation;
