@@ -42,7 +42,7 @@ void RenderLoop()
                                             (float)WindowConfig::SCR_WIDTH / (float)WindowConfig::SCR_HEIGHT,
                                             NEAR, FAR);
 
-   Model girlModel("../assets/sci-fi_girl/scene.gltf");
+    Model girlModel("../assets/sci-fi_girl/scene.gltf");
     // Model girlModel("../assets/buster_drone/scene.gltf");
     Shader animationShader("../shaders/skin/model.vert", "../shaders/skin/model.frag");
     animationShader.Use();
@@ -71,6 +71,7 @@ void RenderLoop()
         animationShader.Use();
         animationShader.setMat4("view", view);
         animationShader.setMat4("pre_view", pre_view);
+        animationShader.setVec3("CameraPos", WindowConfig::mainCamera->Position);
         girlModel.Update(currentFrame);
         girlModel.Render(animationShader);
 

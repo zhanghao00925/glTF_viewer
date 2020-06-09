@@ -6,7 +6,7 @@ in vec2 TexCoords;
 in vec3 WorldPos;
 in vec3 Normal;
 // Other
-uniform vec3 camPos;
+uniform vec3 CameraPos;
 // Work Flow
 uniform int work_flow;
 // alpha
@@ -83,7 +83,7 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 // ----------------------------------------------------------------------------
 vec3 getNormalFromMap()
 {
-    vec3 tangentNormal = texture(normal_texture, TexCoords).xyz * 2.0 - 1.0;
+    vec3 tangentNormal = normalize(texture(normal_texture, TexCoords).xyz * 2.0 - 1.0);
 
     vec3 Q1  = dFdx(WorldPos);
     vec3 Q2  = dFdy(WorldPos);
@@ -96,6 +96,26 @@ vec3 getNormalFromMap()
     mat3 TBN = mat3(T, B, N);
 
     return normalize(TBN * tangentNormal);
+}
+// ----------------------------------------------------------------------------
+vec3 uncharted2_tonemap_partial(vec3 x)
+{
+    float A = 0.15f;
+    float B = 0.50f;
+    float C = 0.10f;
+    float D = 0.20f;
+    float E = 0.02f;
+    float F = 0.30f;
+    return ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-E/F;
+}
+vec3 uncharted2_filmic(vec3 v)
+{
+    float exposure_bias = 2.0f;
+    vec3 curr = uncharted2_tonemap_partial(v * exposure_bias);
+
+    vec3 W = vec3(11.2f);
+    vec3 white_scale = vec3(1.0f) / uncharted2_tonemap_partial(W);
+    return curr * white_scale;
 }
 // ----------------------------------------------------------------------------
 void main()
@@ -148,22 +168,29 @@ void main()
     } else {
         N = Normal;
     }
+    // if (!gl_FrontFacing) {
+    //     N = -N;
+    // }
     // View and reflect vector
-    vec3 V = normalize(camPos - WorldPos);
+    vec3 V = normalize(CameraPos - WorldPos);
     vec3 R = reflect(-V, N);
     // diffuse
     vec3 diffuse = c_diff / PI;
     // reflectance equation
     vec3 Lo = vec3(0.0);
+    vec3 lightPosition = vec3(500.0f);
+    vec3 lightColor = vec3(1000.0f);
     for(int i = 0; i < 1; ++i)
     {
         // calculate per-light radiance
         vec3 L = normalize(vec3(1000.0f) - WorldPos);
         vec3 H = normalize(V + L);
 
-        float distance = length(vec3(1000.0f)  - WorldPos) / 100.0f;
+        float distance = length(lightPosition  - WorldPos) / 100.0f;
         float attenuation = 1.0 / (distance * distance);
-        vec3 radiance = vec3(1000.0f) * attenuation;
+        // scale light by NdotL
+        float NdotL = max(dot(N, L), 0.0);
+        vec3 radiance = lightColor * attenuation * NdotL;
 
         // Cook-Torrance BRDF
         float NDF = DistributionGGX(N, H, roughness);
@@ -173,9 +200,6 @@ void main()
         vec3 nominator    = NDF * G * F;
         float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // 0.001 to prevent divide by zero.
         vec3 specular = nominator / denominator;
-
-        // scale light by NdotL
-        float NdotL = max(dot(N, L), 0.0);
 
         // add to outgoing radiance Lo
         Lo += ((1-F) * diffuse + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
@@ -192,7 +216,8 @@ void main()
         color += emissive;
     }
     // HDR tonemapping
-    color = color / (color + vec3(1.0));
+    // color = color / (color + vec3(1.0));
+    color = uncharted2_filmic(color);
     // gamma correct
     color = pow(color, vec3(1.0/2.2));
 

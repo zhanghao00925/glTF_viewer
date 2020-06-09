@@ -35,3 +35,7 @@ using namespace std;
 #include <glm/gtx/compatibility.hpp>
 using namespace glm;
 
+// Defination
+#define PI 3.1415926535898f
+#define NEAR 0.01f
+#define FAR 1000.f

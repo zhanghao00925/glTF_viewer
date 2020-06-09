@@ -1,5 +1,4 @@
 #include "gbuffer.h"
-#include "core.h"
 #include "config.h"
 
 GBuffer::GBuffer()

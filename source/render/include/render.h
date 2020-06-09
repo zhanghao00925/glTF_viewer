@@ -2,7 +2,6 @@
 
 #include "camera.h"
 #include "controller.h"
-#include "core.h"
 #include "gbuffer.h"
 #include "screen.h"
 #include "shader.h"

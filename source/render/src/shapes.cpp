@@ -4,7 +4,7 @@
 // -------------------------------------------------
 unsigned int sphereVAO = 0;
 unsigned int indexCount;
-void renderSphere()
+void RenderSphere()
 {
     if (sphereVAO == 0)
     {
@@ -19,7 +19,6 @@ void renderSphere()
         std::vector<glm::vec3> normals;
         std::vector<unsigned int> indices;
 
-        const float PI = 3.14159265359;
         const unsigned int X_SEGMENTS = 64;
         const unsigned int Y_SEGMENTS = 64;
         for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
@@ -101,7 +100,7 @@ void renderSphere()
 // -------------------------------------------------
 unsigned int cubeVAO = 0;
 unsigned int cubeVBO = 0;
-void renderCube()
+void RenderCube()
 {
     // initialize (if necessary)
     if (cubeVAO == 0)

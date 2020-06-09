@@ -1,5 +1,5 @@
 #pragma once
 
-void renderSphere();
-void renderCube();
+void RenderSphere();
+void RenderCube();
 void RenderQuad();

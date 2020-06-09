@@ -1,4 +1,4 @@
-#version 440 core
+#version 410 core
 
 #define MAX_MORPHS 3
 #define MAX_BONES 120
