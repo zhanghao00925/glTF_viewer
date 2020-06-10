@@ -180,9 +180,7 @@ void main()
     } else {
         N = Normal;
     }
-    // if (!gl_FrontFacing) {
-    //     N = -N;
-    // }
+
     // View and reflect vector
     vec3 V = normalize(CameraPos - WorldPos);
     vec3 R = reflect(-V, N);
@@ -191,15 +189,16 @@ void main()
     // reflectance equation
     vec3 Lo = vec3(0.0);
     vec3 lightPosition = vec3(500.0f);
-    vec3 lightColor = vec3(1000.0f);
+    vec3 lightColor = vec3(10.0f);
     for(int i = 0; i < 1; ++i)
     {
         // calculate per-light radiance
         vec3 L = normalize(vec3(1000.0f) - WorldPos);
         vec3 H = normalize(V + L);
 
-        float distance = length(lightPosition  - WorldPos) / 100.0f;
-        float attenuation = 1.0 / (distance * distance);
+//        float distance = length(lightPosition  - WorldPos);
+        //        float attenuation = 1.0 / (distance * distance);
+        float attenuation = 1.0;
         // scale light by NdotL
         float NdotL = max(dot(N, L), 0.0);
         float NdotV = max(dot(N, V), 0.0);

@@ -15,14 +15,15 @@ Material::Material()
 
 void Material::BindMaterial(Shader shader, const std::map<int, Texture> &textures) const {
     if (double_sided) {
-        glEnable(GL_CULL_FACE);
-    } else {
         glDisable(GL_CULL_FACE);
+    } else {
+        glEnable(GL_CULL_FACE);
     }
     shader.setInt("alpha_mode", (int)alpha_mode);
     if (alpha_mode == ALPHA_MODE::ALPHA_MODE_BLEND) {
         glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
     } else {
         glDisable(GL_BLEND);
     }
