@@ -28,27 +28,26 @@ uniform mat4 bone_matrix[MAX_BONES];
 
 void main()
 {
-
+    mat4 mesh_matrix;
     if (bSkin == 1) {
         mat4 bond_transform = bone_matrix[joint[0]] * weight[0];
         bond_transform += bone_matrix[joint[1]] * weight[1];
         bond_transform += bone_matrix[joint[2]] * weight[2];
         bond_transform += bone_matrix[joint[3]] * weight[3];
-
-        WorldPos = (bond_transform * vec4(position, 1.0)).xyz;
-        gl_Position  = projection * view * bond_transform * vec4(position, 1.0);
-        Normal       = mat3(transpose(inverse(bond_transform))) * normal;
+        mesh_matrix = local_model * bond_transform;
+        
     } else {
-        vec3 final_position = position;
-        vec3 final_normal = normal;
-        for (int i = 0; i < MAX_MORPHS && i < num_morphs; i++) {
-            final_position += position_displace[i] * morph_weights[i];
-            final_normal += normal_displace[i] * morph_weights[i];
-        }
-        WorldPos = (local_model * vec4(final_position, 1.0)).xyz;
-        gl_Position  = projection * view * local_model * vec4(final_position, 1.0);
-        Normal       = mat3(transpose(inverse(local_model))) * final_normal;
+        mesh_matrix = local_model;
     }
+    vec3 final_position = position;
+    vec3 final_normal = normal;
+    for (int i = 0; i < MAX_MORPHS && i < num_morphs; i++) {
+        final_position += position_displace[i] * morph_weights[i];
+        final_normal += normal_displace[i] * morph_weights[i];
+    }
+    WorldPos = (mesh_matrix * vec4(final_position, 1.0)).xyz;
+    gl_Position  = projection * view * mesh_matrix * vec4(final_position, 1.0);
+    Normal       = mat3(transpose(inverse(mesh_matrix))) * final_normal;
     TexCoords     = texcoord;
 
 }

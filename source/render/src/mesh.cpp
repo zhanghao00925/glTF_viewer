@@ -96,9 +96,9 @@ void Mesh::Render(Shader shader, bool is_skin, vector<float> weights) {
                            &pre_joint_matrices[0][0][0]);
     } else {
         shader.setInt("bSkin", 0);
-        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "local_model"), 1, GL_FALSE, &matrix[0][0]);
-        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "pre_local_model"), 1, GL_FALSE, &pre_matrix[0][0]);
     }
+    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "local_model"), 1, GL_FALSE, &matrix[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "pre_local_model"), 1, GL_FALSE, &pre_matrix[0][0]);
     // Morph targets
     int num_of_morphs = 0;
     if (!morph_vbos.empty()) {

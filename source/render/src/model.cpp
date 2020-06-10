@@ -917,6 +917,7 @@ void Model::UpdateNode(int node_id) {
             unsigned int num_joints = std::min(static_cast<unsigned int>(skin.joints.size()), MAX_NUM_JOINTS);
             for (unsigned int i = 0; i < num_joints; ++i) {
                 /* NOTE: Reference: https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_020_Skins.md */
+//                 auto joint_mat = GetNodeMatrix(skin.joints[i]) * skin.inverse_bind_matrices[i];
                 auto joint_mat = inverse_transform * GetNodeMatrix(skin.joints[i]) * skin.inverse_bind_matrices[i];
                 mesh.pre_joint_matrices[i] = mesh.joint_matrices[i];
                 mesh.joint_matrices[i] = joint_mat;
