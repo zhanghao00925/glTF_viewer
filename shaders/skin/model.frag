@@ -1,4 +1,4 @@
-#version 410 core
+#version 440 core
 // ouptut
 out vec4 FragColor;
 // vertex shader input
@@ -80,6 +80,14 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 {
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
+vec3 sRGBToLinear(vec3 srgbIn)
+{
+    return vec3(pow(srgbIn.xyz, vec3(2.2)));
+}
+vec4 sRGBToLinear(vec4 srgbIn)
+{
+    return vec4(sRGBToLinear(srgbIn.xyz), srgbIn.w);
+}
 // ----------------------------------------------------------------------------
 vec3 getNormalFromMap()
 {
@@ -118,45 +126,49 @@ vec3 uncharted2_filmic(vec3 v)
     return curr * white_scale;
 }
 // ----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------
 void main()
 {
     vec3 c_diff;
     float alpha;
     vec3 F0;
-    float roughness;
+    float alphaRoughness;
     if (0 == work_flow) {
         // METALLIC_ROUGHNESS
         // baseColor
-        vec4 baseColor = baseColor_factor * pow(texture(baseColor_texture, TexCoords), vec4(2.2));
+        vec4 baseColor = baseColor_factor * sRGBToLinear(texture(baseColor_texture, TexCoords));
         alpha = baseColor.a;
-
         // metallic and roughness
-        vec2 metallicRoughness = texture(metallicRoughness_texture, TexCoords).rg;
-        float metallic = metallic_factor * metallicRoughness.r;
-        float roughness = roughness_factor * metallicRoughness.g;
+        float metallic = metallic_factor * texture(metallicRoughness_texture, TexCoords).b;
+        float roughness = roughness_factor * texture(metallicRoughness_texture, TexCoords).g;
         const vec3 dielectricSpecular = vec3(0.04, 0.04, 0.04);
         const vec3 black = vec3(0, 0, 0);
-        c_diff = mix(baseColor.rgb * (1 - dielectricSpecular.r), black, metallic);
+        c_diff = mix(baseColor.rgb * (vec3(1.0f) - dielectricSpecular.r), black, metallic);
         F0 = mix(dielectricSpecular, baseColor.rgb, metallic);
-        roughness = roughness;
+        alphaRoughness = roughness;
     } else {
         // SPECULAR_GLOSSINESS
         // diffuseColor
-        vec4 diffuseColor = diffuse_factor * pow(texture(diffuse_texture, TexCoords), vec4(2.2));
+        vec4 diffuseColor = diffuse_factor * sRGBToLinear(texture(diffuse_texture, TexCoords));
         alpha = diffuseColor.a;
         // metallic and roughness
-        vec4 specular_glossiness = pow(texture(specular_glossiness_texture, TexCoords), vec4(2.2));
+        vec4 specular_glossiness = sRGBToLinear(texture(specular_glossiness_texture, TexCoords));
         vec3 specular = specular_factor * specular_glossiness.rgb;
         float glossiness = glossiness_factor * specular_glossiness.a;
         c_diff = diffuseColor.rgb * (1 - max(specular.r, max(specular.g, specular.b)));
         F0 = specular;
-        roughness = 1.0f - glossiness;
+        alphaRoughness = 1.0f - glossiness;
     }
     if (alpha_mode == 0) {
         alpha = 1.0;
     }
-    if (alpha_mode == 1 && alpha < alpha_cutoff) {
-        discard;
+    if (alpha_mode == 1) {
+        if (alpha < alpha_cutoff) {
+            discard;
+        } else {
+            alpha = 1.0;
+        }
     }
     if (alpha_mode == 2 && alpha < 0.15) {
         discard;
@@ -190,36 +202,40 @@ void main()
         float attenuation = 1.0 / (distance * distance);
         // scale light by NdotL
         float NdotL = max(dot(N, L), 0.0);
-        vec3 radiance = lightColor * attenuation * NdotL;
+        float NdotV = max(dot(N, V), 0.0);
+        vec3 radiance = lightColor * attenuation;
 
         // Cook-Torrance BRDF
-        float NDF = DistributionGGX(N, H, roughness);
-        float G   = GeometrySmith(N, V, L, roughness);
-        vec3 F    = fresnelSchlickRoughness(max(dot(H, V), 0.0), F0, roughness);
+        float NDF = DistributionGGX(N, H, alphaRoughness);
+        float G   = GeometrySmith(N, V, L, alphaRoughness);
+        vec3 F    = fresnelSchlickRoughness(max(dot(H, V), 0.0), F0, alphaRoughness);
 
         vec3 nominator    = NDF * G * F;
-        float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // 0.001 to prevent divide by zero.
+        float denominator = max(4 * NdotV * NdotL, 0.001); // 0.001 to prevent divide by zero.
         vec3 specular = nominator / denominator;
 
         // add to outgoing radiance Lo
         Lo += ((1-F) * diffuse + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+//        Lo += (specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+//        Lo += ((1-F) * diffuse) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
     }
     vec3 color = Lo;
     // occlusion
     if ((flag & (1 << 2)) != 0) {
-        vec3 occlusion = texture(occlusion_texture, TexCoords).rgb;
+        float occlusion = texture(occlusion_texture, TexCoords).r;
         color = mix(color, color * occlusion, occlusion_strength);
     }
     // emissive
     if ((flag & (1 << 0)) != 0) {
-        vec3 emissive = emissive_factor * texture(emissive_texture, TexCoords).rgb;
+        vec3 emissive = emissive_factor * sRGBToLinear(texture(emissive_texture, TexCoords).rgb);
         color += emissive;
     }
     // HDR tonemapping
-    // color = color / (color + vec3(1.0));
+//     color = color / (color + vec3(1.0));
     color = uncharted2_filmic(color);
     // gamma correct
     color = pow(color, vec3(1.0/2.2));
 
     FragColor = vec4(color, alpha);
+//    FragColor = vec4(F0, alpha);
 }

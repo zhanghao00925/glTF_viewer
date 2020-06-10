@@ -31,7 +31,7 @@ public:
     int BindTextureInfo(Shader shader, const string &name, int slot, const std::map<int, Texture> &textures) const {
         int flag = 0;
         if (textures.find(index) != textures.end()) {
-            shader.setInt(name + "_texture", slot);
+             shader.setInt(name + "_texture", slot);
             glActiveTexture(GL_TEXTURE0 + slot);
             textures.at(index).BindTexture();
             flag |= 1 << slot;
@@ -62,7 +62,7 @@ public:
     int BindTextureInfo(Shader shader, int slot, const std::map<int, Texture> &textures) const {
         int flag = 0;
         if (textures.find(index) != textures.end()) {
-            shader.setInt("normal_texture", slot);
+             shader.setInt("normal_texture", slot);
             glActiveTexture(GL_TEXTURE0 + slot);
             textures.at(index).BindTexture();
             shader.setFloat("normal_scale", scale);
@@ -94,7 +94,7 @@ public:
     int  BindTextureInfo(Shader shader, int slot, const std::map<int, Texture> &textures) const {
         int flag = 0;
         if (textures.find(index) != textures.end()) {
-            shader.setInt("occlusion_texture", slot);
+             shader.setInt("occlusion_texture", slot);
             glActiveTexture(GL_TEXTURE0 + slot);
             textures.at(index).BindTexture();
             shader.setFloat("occlusion_strength", strength);
@@ -128,14 +128,14 @@ public:
 
     // return next availiable texture slot
     int BindTextureInfo(Shader shader, int slot, const std::map<int, Texture> &textures) const {
+        // pbr baseColor Texture
+        int flag = 0;
+        shader.setVec4("baseColor_factor", baseColorFactor);
+        flag |= baseColorTexture.BindTextureInfo(shader, "baseColor", slot, textures);
         // pbr Metallic roughness
         shader.setFloat("metallic_factor", metallicFactor);
         shader.setFloat("roughness_factor", roughnessFactor);
-        shader.setVec4("baseColor_factor", baseColorFactor);
-        // pbr baseColor Texture
-        int flag = 0;
-        flag |= baseColorTexture.BindTextureInfo(shader, "baseColor", slot, textures);
-        flag |= baseColorTexture.BindTextureInfo(shader, "metallicRoughness", slot + 1, textures);
+        flag |= metallicRoughnessTexture.BindTextureInfo(shader, "metallicRoughness", slot + 1, textures);
         return flag;
     }
 };

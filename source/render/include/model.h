@@ -38,8 +38,8 @@ public:
     void SetupModel();
     void CleanupModel();
     void Update(double total_time);
-    void RenderNode(Shader shader, int node_id);
-    void Render(Shader shader);
+    void RenderNode(const Shader& shader, int node_id);
+    void Render(const Shader& shader);
 
 public:
     bool IsAnimated() const;

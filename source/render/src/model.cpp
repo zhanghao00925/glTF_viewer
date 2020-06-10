@@ -685,27 +685,27 @@ Model::~Model() {
 
 /* function that does initial work so that the model can be used */
 void Model::SetupModel() {
-    for (std::size_t i = 0; i < textures.size(); ++i)
-        textures[i].SetupTexture();
+    for (auto & texture : textures)
+        texture.second.SetupTexture();
 
-    for (std::size_t i = 0; i < meshes.size(); ++i)
-        meshes[i].SetupMesh();
+    for (auto & meshe : meshes)
+        meshe.second.SetupMesh();
 }
 
 /* function to clean up the model used */
 void Model::CleanupModel() {
-    for (std::size_t i = 0; i < textures.size(); ++i)
-        textures[i].CleanupTexture();
+    for (auto & texture : textures)
+        texture.second.CleanupTexture();
 
-    for (std::size_t i = 0; i < meshes.size(); ++i)
-        meshes[i].CleanupMesh();
+    for (auto & meshe : meshes)
+        meshe.second.CleanupMesh();
 }
 
 /* function to update the state of the model */
 /* (mainly update animation)                 */
 void Model::Update(double total_time) {
 
-    if (animations.size() > 0) {
+    if (!animations.empty()) {
         /* NOTE: only the first animation is used */
         UpdateAnimation(total_time);
     }
@@ -713,17 +713,13 @@ void Model::Update(double total_time) {
 
 /* function to render model */
 
-void Model::RenderNode(Shader shader, int node_id) {
+void Model::RenderNode(const Shader& shader, int node_id) {
     auto &node = nodes[node_id];
     if (node.mesh_id > -1) {
         auto &mesh = meshes[node.mesh_id];
         const auto &material = materials[mesh.material_id];
         material.BindMaterial(shader, textures);
-        if (node.skin_id > -1) {
-            mesh.Render(shader, true, node.weights);
-        } else {
-            mesh.Render(shader, false, node.weights);
-        }
+        mesh.Render(shader, node.skin_id > -1, node.weights);
     }
 
     for (auto child : node.child_ids) {
@@ -731,12 +727,12 @@ void Model::RenderNode(Shader shader, int node_id) {
     }
 }
 
-void Model::Render(Shader shader) {
+void Model::Render(const Shader& shader) {
     RenderNode(shader, 0);
 }
 
 bool Model::IsAnimated() const {
-    return (animations.size() > 0 && skins.size() > 0);
+    return (!animations.empty() && !skins.empty());
 }
 
 void Model::ChangeAnimation(int num) {
@@ -869,7 +865,7 @@ void Model::UpdateAnimation(double duration) {
         }
     }
 
-    if (updated == true) {
+    if (updated) {
         UpdateNode(0);
     }
 }
