@@ -89,21 +89,50 @@ vec4 sRGBToLinear(vec4 srgbIn)
     return vec4(sRGBToLinear(srgbIn.xyz), srgbIn.w);
 }
 // ----------------------------------------------------------------------------
-vec3 getNormalFromMap()
+struct NormalInfo {
+    vec3 ng;
+    vec3 t;
+    vec3 b;
+    vec3 n;
+};
+NormalInfo getNormalFromMap(vec3 v)
 {
-    vec3 tangentNormal = normalize(texture(normal_texture, TexCoords).xyz * 2.0 - 1.0);
+    vec2 UV = TexCoords;
+    vec3 uv_dx = dFdx(vec3(UV, 0.0));
+    vec3 uv_dy = dFdy(vec3(UV, 0.0));
 
-    vec3 Q1  = dFdx(WorldPos);
-    vec3 Q2  = dFdy(WorldPos);
-    vec2 st1 = dFdx(TexCoords);
-    vec2 st2 = dFdy(TexCoords);
+    vec3 t_ = (uv_dy.t * dFdx(WorldPos) - uv_dx.t * dFdy(WorldPos)) /
+    (uv_dx.s * uv_dy.t - uv_dy.s * uv_dx.t);
 
-    vec3 N   = normalize(Normal);
-    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
-    vec3 B  = -normalize(cross(N, T));
-    mat3 TBN = mat3(T, B, N);
+    vec3 n, t, b, ng;
+    // no geometrical tbn
+    ng = normalize(Normal);
+    t = normalize(t_ - ng * dot(ng, t_));
+    b = cross(ng, t);
+    float facing = step(0.0, dot(v, ng)) * 2.0 - 1.0;
+    t *= facing;
+    b *= facing;
+    ng *= facing;
+    vec3 direction;
+    // no anisoptry
+    direction = vec3(1.0, 0.0, 0.0);
+    t = mat3(t, b, ng) * normalize(direction);
+    b = normalize(cross(ng, t));
 
-    return normalize(TBN * tangentNormal);
+    if ((flag & (1 << 1)) != 0) {
+        n = texture(normal_texture, UV).rgb * 2.0 - vec3(1.0);
+        n *= vec3(normal_scale, normal_scale, 1.0);
+        n = mat3(t, b, ng) * normalize(n);
+    } else {
+        n = ng;
+    }
+
+    NormalInfo info;
+    info.ng = ng;
+    info.t = t;
+    info.b = b;
+    info.n = n;
+    return info;
 }
 // ----------------------------------------------------------------------------
 vec3 uncharted2_tonemap_partial(vec3 x)
@@ -170,19 +199,13 @@ void main()
             alpha = 1.0;
         }
     }
-    if (alpha_mode == 2 && alpha < 0.15) {
-        discard;
-    }
     // normal
-    vec3 N;
-    if ((flag & (1 << 1)) != 0) {
-        N = getNormalFromMap();
-    } else {
-        N = Normal;
-    }
+
 
     // View and reflect vector
     vec3 V = normalize(CameraPos - WorldPos);
+    NormalInfo normalInfo = getNormalFromMap(V);
+    vec3 N = normalInfo.n;
     vec3 R = reflect(-V, N);
     // diffuse
     vec3 diffuse = c_diff / PI;

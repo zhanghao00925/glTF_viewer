@@ -37,6 +37,7 @@ public:
     std::vector<unsigned int> indices;
 
     int material_id;
+    int skin_id;
     mat4 matrix;
     mat4 pre_matrix;
     std::vector<std::vector<Vertex>> morph_vertices;

@@ -26,6 +26,9 @@ using namespace std;
 
 // #include <GLFW/glfw3native.h>
 
+#include "stb_image_write.h"
+#include "stb_image.h"
+
 // GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

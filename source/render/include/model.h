@@ -13,6 +13,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <queue>
 #include <map>
 
 #include "mesh.h"
@@ -39,6 +40,7 @@ public:
     void CleanupModel();
     void Update(double total_time);
     void RenderNode(const Shader& shader, int node_id);
+    void RenderTransparent(const Shader &shader);
     void Render(const Shader& shader);
 
 public:
@@ -52,6 +54,18 @@ private:
     void UpdateNode(int node_id);
 
 private:
+    struct RenderDependence {
+        int mesh_id;
+        int skin_id;
+        vector<float> weights;
+    };
+    struct TransparentCompare{
+        bool operator()(pair<float, RenderDependence> x,pair<float, RenderDependence> y)
+        {
+            return x.first > y.first; // x is front
+        }
+    };
+    std::priority_queue<pair<float, RenderDependence>, vector<pair<float, RenderDependence>>, TransparentCompare> transparent_queue;
     size_t curr_animation;
     std::string filename;
     std::map<int, Mesh> meshes;

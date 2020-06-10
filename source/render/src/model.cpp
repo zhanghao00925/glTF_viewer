@@ -11,6 +11,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
 #include <tiny_gltf.h>
+#include "config.h"
 
 /*************************/
 /*  FUNCTION PROTOTYPES  */
@@ -718,8 +719,21 @@ void Model::RenderNode(const Shader& shader, int node_id) {
     if (node.mesh_id > -1) {
         auto &mesh = meshes[node.mesh_id];
         const auto &material = materials[mesh.material_id];
-        material.BindMaterial(shader, textures);
-        mesh.Render(shader, node.skin_id > -1, node.weights);
+        if (material.alpha_mode != ALPHA_MODE::ALPHA_MODE_BLEND) {
+            material.BindMaterial(shader, textures);
+            mesh.Render(shader, node.skin_id > -1, node.weights);
+        } else {
+            // Add to transparent prior_queue
+            RenderDependence rd;
+            rd.mesh_id = node.mesh_id;
+            rd.skin_id = node.skin_id;
+            rd.weights = node.weights;
+            // assume centroid is (0, 0, 0)
+            vec4 pos = WindowConfig::mainCamera->GetViewMatrix() * node.matrix * vec4(vec3(0.0), 1.0);
+            pos /= pos.w;
+            float depth = pos.z;
+            transparent_queue.push(make_pair(depth, rd));
+        }
     }
 
     for (auto child : node.child_ids) {
@@ -728,7 +742,21 @@ void Model::RenderNode(const Shader& shader, int node_id) {
 }
 
 void Model::Render(const Shader& shader) {
+    assert(transparent_queue.empty());
     RenderNode(shader, 0);
+    RenderTransparent(shader);
+}
+
+void Model::RenderTransparent(const Shader &shader) {
+    while (!transparent_queue.empty()) {
+        auto transparent_mesh = transparent_queue.top();
+        auto &mesh = meshes[transparent_mesh.second.mesh_id];
+        const auto &material = materials[mesh.material_id];
+        material.BindMaterial(shader, textures);
+        mesh.Render(shader, transparent_mesh.second.skin_id > -1, transparent_mesh.second.weights);
+        transparent_queue.pop();
+    }
+    return;
 }
 
 bool Model::IsAnimated() const {
