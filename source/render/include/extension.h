@@ -166,4 +166,9 @@ public:
     TextureInfo specular_glossiness_texture;
 }; // class Extension
 
+class KHR_materials_unlit : public Extension {
+public:
+    int BindExtension(Shader shader, int slot, const std::map<int, Texture> &textures) const override;
+};
+
 #endif // !_EXTENSION_H_

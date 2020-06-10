@@ -89,17 +89,18 @@ void Mesh::CleanupMesh() {
 void Mesh::Render(Shader shader, bool is_skin, vector<float> weights) {
     // Skeleton animation
     if (is_skin) {
-        glUniform1i(glGetUniformLocation(shader.Program, "bSkin"), 1);
+        shader.setInt("bSkin", 1);
         glUniformMatrix4fv(glGetUniformLocation(shader.Program, "bone_matrix"), MAX_NUM_JOINTS, GL_FALSE,
                            &joint_matrices[0][0][0]);
         glUniformMatrix4fv(glGetUniformLocation(shader.Program, "pre_bone_matrix"), MAX_NUM_JOINTS, GL_FALSE,
                            &pre_joint_matrices[0][0][0]);
     } else {
-        glUniform1i(glGetUniformLocation(shader.Program, "bSkin"), 0);
+        shader.setInt("bSkin", 0);
         glUniformMatrix4fv(glGetUniformLocation(shader.Program, "local_model"), 1, GL_FALSE, &matrix[0][0]);
         glUniformMatrix4fv(glGetUniformLocation(shader.Program, "pre_local_model"), 1, GL_FALSE, &pre_matrix[0][0]);
     }
     // Morph targets
+    int num_of_morphs = 0;
     if (!morph_vbos.empty()) {
         // select
         pre_morph_indics = morph_indices;
@@ -120,9 +121,10 @@ void Mesh::Render(Shader shader, bool is_skin, vector<float> weights) {
             // set vbo and weight buffer
             morph_indices[i] = index;
             morph_weights[i] = max;
+            num_of_morphs++;
         }
         glBindVertexArray(vao);
-        for (int i = 0; i < MAX_NUM_MORPHS; i++) {
+        for (int i = 0; i < MAX_NUM_MORPHS &&  i < morph_vbos.size(); i++) {
             glBindBuffer(GL_ARRAY_BUFFER, morph_vbos[morph_indices[i]]);
             glEnableVertexAttribArray(5 + i);
             glVertexAttribPointer(5 + i, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, position)));
@@ -139,6 +141,7 @@ void Mesh::Render(Shader shader, bool is_skin, vector<float> weights) {
         glUniform1fv(glGetUniformLocation(shader.Program, "pre_morph_weights"), MAX_NUM_MORPHS, pre_morph_weights.data());
     }
 
+    shader.setInt("num_morphs", num_of_morphs);
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);

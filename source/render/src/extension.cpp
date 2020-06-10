@@ -14,3 +14,7 @@ int KHR_materials_pbrSpecularGlossiness::BindExtension(Shader shader, int slot, 
     flag |= specular_glossiness_texture.BindTextureInfo(shader, "specular_glossiness", slot + 1, textures);
     return flag;
 }
+
+int KHR_materials_unlit::BindExtension(Shader shader, int slot, const map<int, Texture> &textures) const {
+    return 0;
+}

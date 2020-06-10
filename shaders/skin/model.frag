@@ -166,31 +166,50 @@ void main()
     if (0 == work_flow) {
         // METALLIC_ROUGHNESS
         // baseColor
-        vec4 baseColor = baseColor_factor * sRGBToLinear(texture(baseColor_texture, TexCoords));
+        vec4 baseColor = baseColor_factor;
+        if ((flag & (1 << 3)) != 0) {
+            baseColor *= sRGBToLinear(texture(baseColor_texture, TexCoords));
+        }
         alpha = baseColor.a;
         // metallic and roughness
-        float metallic = metallic_factor * texture(metallicRoughness_texture, TexCoords).b;
-        float roughness = roughness_factor * texture(metallicRoughness_texture, TexCoords).g;
+        float metallic = metallic_factor;
+        float roughness = roughness_factor;
+        if ((flag & (1 << 4)) != 0) {
+            metallic *= texture(metallicRoughness_texture, TexCoords).b;
+            roughness *= texture(metallicRoughness_texture, TexCoords).g;
+        }
         const vec3 dielectricSpecular = vec3(0.04, 0.04, 0.04);
         const vec3 black = vec3(0, 0, 0);
         c_diff = mix(baseColor.rgb * (vec3(1.0f) - dielectricSpecular.r), black, metallic);
         F0 = mix(dielectricSpecular, baseColor.rgb, metallic);
         alphaRoughness = roughness;
-    } else {
+    } else if (1 == work_flow) {
         // SPECULAR_GLOSSINESS
         // diffuseColor
-        vec4 diffuseColor = diffuse_factor * sRGBToLinear(texture(diffuse_texture, TexCoords));
+        vec4 diffuseColor = diffuse_factor;
+        if ((flag & (1 << 5)) != 0) {
+            diffuseColor *= sRGBToLinear(texture(diffuse_texture, TexCoords));
+        }
         alpha = diffuseColor.a;
         // metallic and roughness
         vec4 specular_glossiness = sRGBToLinear(texture(specular_glossiness_texture, TexCoords));
-        vec3 specular = specular_factor * specular_glossiness.rgb;
-        float glossiness = glossiness_factor * specular_glossiness.a;
+        vec3 specular = specular_factor;
+        float glossiness = glossiness_factor;
+        if ((flag & (1 << 6)) != 0) {
+            specular *= specular_glossiness.rgb;
+            glossiness *= specular_glossiness.a;
+        }
         c_diff = diffuseColor.rgb * (1 - max(specular.r, max(specular.g, specular.b)));
         F0 = specular;
         alphaRoughness = 1.0f - glossiness;
-    }
-    if (alpha_mode == 0) {
-        alpha = 1.0;
+    } else {
+        // unlit
+        vec4 baseColor = baseColor_factor;
+        if ((flag & (1 << 3)) != 0) {
+            baseColor *= sRGBToLinear(texture(baseColor_texture, TexCoords));
+        }
+        FragColor = baseColor;
+        return;
     }
     if (alpha_mode == 1) {
         if (alpha < alpha_cutoff) {
@@ -199,9 +218,6 @@ void main()
             alpha = 1.0;
         }
     }
-    // normal
-
-
     // View and reflect vector
     vec3 V = normalize(CameraPos - WorldPos);
     NormalInfo normalInfo = getNormalFromMap(V);

@@ -25,7 +25,8 @@ enum class ALPHA_MODE : int
 enum class PBR_WORK_FLOW : int
 {
     METALLIC_ROUGHNESS = 0,
-    SPECULAR_GLOSSINESS
+    SPECULAR_GLOSSINESS,
+    UNLIT
 }; // enum class PBR_WORK_FLOW
 
 /**************************/

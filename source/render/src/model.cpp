@@ -658,7 +658,13 @@ Material LoadglTFMaterial(const tinygltf::Model &gltf_model, const tinygltf::Mat
                 }
                 material.work_flow = PBR_WORK_FLOW::SPECULAR_GLOSSINESS;
                 material.extensions.push_back(extension_ptr);
-            } else {
+            }
+            else if (extension.first == "KHR_materials_unlit") {
+                auto extension_ptr = make_shared<KHR_materials_unlit>();
+                material.work_flow = PBR_WORK_FLOW::UNLIT;
+                material.extensions.push_back(extension_ptr);
+            }
+            else {
                 throw std::runtime_error("Unimplement extension type.");
             }
         }
@@ -710,6 +716,7 @@ void Model::Update(double total_time) {
         /* NOTE: only the first animation is used */
         UpdateAnimation(total_time);
     }
+    UpdateNode(0);
 }
 
 /* function to render model */
@@ -893,9 +900,7 @@ void Model::UpdateAnimation(double duration) {
         }
     }
 
-    if (updated) {
-        UpdateNode(0);
-    }
+
 }
 
 /* function to update the transformation information of a node */
