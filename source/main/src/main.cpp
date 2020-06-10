@@ -1,10 +1,10 @@
 #include "render.h"
 #include "argparse.hpp"
 
-// Main
 void RenderLoop();
 
 string glTF_model_path;
+
 int main(int argc, char **argv)
 {
     argparse::ArgumentParser program("glTF_viewer");
@@ -51,11 +51,11 @@ void RenderLoop()
     animationShader.Use();
     animationShader.setMat4("projection", projection);
 
-    GLenum err;
-    while((err = glGetError()) != GL_NO_ERROR)
-    {
-         cout << "After" << hex << showbase << err << endl;
-    }
+    // GLenum err;
+    // while((err = glGetError()) != GL_NO_ERROR)
+    // {
+    //      cout << "After" << hex << showbase << err << endl;
+    // }
     mat4 view, pre_view;
     static float deltaTime(0.0f);//        float attenuation = 1.0 / (distance * distance);
 
