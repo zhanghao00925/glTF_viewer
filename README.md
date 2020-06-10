@@ -36,6 +36,18 @@ Use <kbd>w</kbd>,<kbd>a</kbd>,<kbd>s</kbd>,<kbd>d</kbd> to move the camera, use 
 * [x] Skeleton Animation
 * [x] PBR
 
+![](examples/sci-fi_girl.gif)
+
+Author : patrix
+
+[url: https://sketchfab.com/3d-models/sci-fi-girl-v02-walkcycle-test-07ac452d75cc47969234b224422ea85d]
+
+![](examples/zelda.png)
+
+Author : theStoff
+
+[url: https://sketchfab.com/3d-models/zelda-breath-of-the-wild-bf99374334a64291ae2876c83269adb6]
+
 ## Todo List
 
 * [ ] Improve render quality.

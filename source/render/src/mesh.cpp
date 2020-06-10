@@ -125,13 +125,7 @@ void Mesh::Render(Shader shader, bool is_skin, vector<float> weights) {
         }
         glBindVertexArray(vao);
         for (int i = 0; i < MAX_NUM_MORPHS &&  i < morph_vbos.size(); i++) {
-            glgit submodule update --init --recursive
-
-mkdir build
-cd build
-cmake ..
-make -j4
-BindBuffer(GL_ARRAY_BUFFER, morph_vbos[morph_indices[i]]);
+            glBindBuffer(GL_ARRAY_BUFFER, morph_vbos[morph_indices[i]]);
             glEnableVertexAttribArray(5 + i);
             glVertexAttribPointer(5 + i, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, position)));
             glEnableVertexAttribArray(5 + i);
