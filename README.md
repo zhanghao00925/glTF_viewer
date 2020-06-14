@@ -35,6 +35,7 @@ Use <kbd>w</kbd>,<kbd>a</kbd>,<kbd>s</kbd>,<kbd>d</kbd> to move the camera, use 
 * [x] Morph Targets
 * [x] Skeleton Animation
 * [x] PBR
+* [x] OIT
 
 ![](examples/sci-fi_girl.gif)
 
