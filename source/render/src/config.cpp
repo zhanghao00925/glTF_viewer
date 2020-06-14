@@ -24,7 +24,7 @@ bool WindowConfig::InitWindow()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-    glfwWindowHint(GLFW_SAMPLES, 4);
+    // glfwWindowHint(GLFW_SAMPLES, 4);
     if (!WindowConfig::Visible)
     {
         //            cout << "WindowsConfig::visible : " << WindowConfig::visible << endl;
@@ -56,7 +56,7 @@ bool WindowConfig::InitWindow()
     // Define the viewport dimensions
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_MULTISAMPLE);
+    // glEnable(GL_MULTISAMPLE);
 //     glEnable(GL_CULL_FACE);
     // Setup camera
     mainCamera = new Camera(vec3(0, 0, 10));

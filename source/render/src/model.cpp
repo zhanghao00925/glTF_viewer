@@ -751,7 +751,7 @@ void Model::RenderNode(const Shader& shader, int node_id) {
 void Model::Render(const Shader& shader) {
     assert(transparent_queue.empty());
     RenderNode(shader, 0);
-    RenderTransparent(shader);
+    // RenderTransparent(shader);
 }
 
 void Model::RenderTransparent(const Shader &shader) {
