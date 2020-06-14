@@ -60,18 +60,10 @@ void Mesh::SetupMesh() {
 
     const int NUM_MORPH_TARGETS = morph_vertices.size();
     morph_vbos.resize(NUM_MORPH_TARGETS, 0);
-    vector<vec3> Positions;
     for (int i = 0; i < NUM_MORPH_TARGETS; i++) {
-        const int NUM_VERTICES = morph_vertices[i].size();
-        Positions.clear();
-        Positions.reserve(NUM_VERTICES);
-        for (int j = 0; j < NUM_VERTICES; j++) {
-            Positions.emplace_back(morph_vertices[i][j].position);
-        }
         glGenBuffers(1, &morph_vbos[i]);
         glBindBuffer(GL_ARRAY_BUFFER, morph_vbos[i]);
         glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * morph_vertices[i].size(), morph_vertices[i].data(), GL_STATIC_DRAW);
-
     }
 }
 
@@ -128,13 +120,13 @@ void Mesh::Render(Shader shader, bool is_skin, vector<float> weights) {
             glBindBuffer(GL_ARRAY_BUFFER, morph_vbos[morph_indices[i]]);
             glEnableVertexAttribArray(5 + i);
             glVertexAttribPointer(5 + i, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, position)));
-            glEnableVertexAttribArray(5 + i);
+            glEnableVertexAttribArray(8 + i);
             glVertexAttribPointer(8 + i, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, normal)));
-            glBindBuffer(GL_ARRAY_BUFFER, morph_vbos[pre_morph_indics[i]]);
-            glEnableVertexAttribArray(5 + i + MAX_NUM_MORPHS * 2);
-            glVertexAttribPointer(5 + i + MAX_NUM_MORPHS, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, position)));
-            glEnableVertexAttribArray(5 + i + MAX_NUM_MORPHS * 2);
-            glVertexAttribPointer(5 + i + MAX_NUM_MORPHS, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, normal)));
+            // glBindBuffer(GL_ARRAY_BUFFER, morph_vbos[pre_morph_indics[i]]);
+            // glEnableVertexAttribArray(5 + i + MAX_NUM_MORPHS * 2);
+            // glVertexAttribPointer(5 + i + MAX_NUM_MORPHS, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, position)));
+            // glEnableVertexAttribArray(8 + i + MAX_NUM_MORPHS * 2);
+            // glVertexAttribPointer(8 + i + MAX_NUM_MORPHS, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void *>(offsetof(Vertex, normal)));
         }
         glBindVertexArray(0);
         glUniform1fv(glGetUniformLocation(shader.Program, "morph_weights"), MAX_NUM_MORPHS, morph_weights.data());

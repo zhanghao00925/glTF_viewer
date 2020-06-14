@@ -98,6 +98,7 @@ void main()
     for( int i = 0; i < count; i++ )
     {
         color = mix(color, frags[i].color, frags[i].color.a);
+        // color.rgb += frags[i].color.rgb * frags[i].color.a;
     }
 
     // HDR tonemapping
