@@ -228,15 +228,13 @@ void main()
     // reflectance equation
     vec3 Lo = vec3(0.0);
     vec3 lightPosition = vec3(500.0f);
-    vec3 lightColor = vec3(10.0f);
+    vec3 lightColor = vec3(0.5f);
     for(int i = 0; i < 1; ++i)
     {
         // calculate per-light radiance
         vec3 L = normalize(vec3(1000.0f) - WorldPos);
         vec3 H = normalize(V + L);
 
-//        float distance = length(lightPosition  - WorldPos);
-        //        float attenuation = 1.0 / (distance * distance);
         float attenuation = 1.0;
         // scale light by NdotL
         float NdotL = max(dot(N, L), 0.0);
@@ -254,8 +252,8 @@ void main()
 
         // add to outgoing radiance Lo
         Lo += ((1-F) * diffuse + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
-//        Lo += (specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
-//        Lo += ((1-F) * diffuse) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+        // Lo += (specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+        // Lo += ((1-F) * diffuse) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
     }
     vec3 color = Lo;
     // occlusion
@@ -268,12 +266,5 @@ void main()
         vec3 emissive = emissive_factor * sRGBToLinear(texture(emissive_texture, TexCoords).rgb);
         color += emissive;
     }
-    // HDR tonemapping
-//     color = color / (color + vec3(1.0));
-    color = uncharted2_filmic(color);
-    // gamma correct
-    color = pow(color, vec3(1.0/2.2));
-
     FragColor = vec4(color, alpha);
-//    FragColor = vec4(F0, alpha);
 }
